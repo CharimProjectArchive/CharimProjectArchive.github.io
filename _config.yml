@@ -106,9 +106,9 @@ analytics:
 author:
   name             : "Project Archive"
   avatar           : # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
-  bio              : "Data Analysis & Data Science"
-  location         : "Seoul"
-  email            : "sjad132@naver.com"
+  bio              : "Data Analysis\n & Data Science"
+  location         : #
+  email            : #
   links:
     - label: "Email"
       icon: "fas fa-fw fa-envelope-square"
