@@ -104,9 +104,9 @@ analytics:
 
 # Site Author
 author:
-  name             : "DA/DS"
+  name             : "Data Analysis<br>& Data Science"
   avatar           : # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
-  bio              : "Data Analysis<br>& Data Science"
+  bio              : #"Data Analysis<br>& Data Science"
   location         : #
   email            : #
   links:
