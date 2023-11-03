@@ -1,7 +1,7 @@
 ---
 layout: single
 title:  "Part 01. 한국어 온라인 텍스트에 대한 탐색적 연구"
-categories: "Project Profile_model"
+categories: [Project]Profile_model
 tag: [EDA, NLP]
 ---
 {: .notice--primary} 
