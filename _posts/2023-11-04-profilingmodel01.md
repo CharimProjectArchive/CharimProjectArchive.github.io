@@ -5,9 +5,8 @@ categories: Profile_model
 tag: [EDA, NLP]
 ---
 {: .notice--primary} 
-**Part 01. 한국어 온라인 텍스트에 대한 탐색적 연구**
-기존 NLP와 LLM의 한국어 자연어 처리에 대한 대안 제시(변수 개발)
-<br>
+**Part 01. 한국어 온라인 텍스트에 대한 탐색적 연구**<br>
+기존 NLP와 LLM의 한국어 자연어 처리에 대한 대안 제시(변수 개발)<br>
 
 ## h2 큰 제목+밑줄
 콘텐츠1
