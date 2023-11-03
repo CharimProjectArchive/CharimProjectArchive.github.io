@@ -1,18 +1,18 @@
 # main links
 main:
-  - title: "Category"
+  - title: "Project List"
     url: /categories/
   - title: "tag"
     url: /tags/
 
 docs:
-  - title: "Category"
+  - title: "Project List"
     url: /categories/
   - title: "tag"
     url: /tags/
 
 counts:
-  - title: "Category"
+  - title: "Project List"
     use: true
   - title: "tag"
     use: false
