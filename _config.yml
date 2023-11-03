@@ -106,7 +106,7 @@ analytics:
 author:
   name             : "Project Archive"
   avatar           : # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
-  bio              : "Data Analysis\n & Data Science"
+  bio              : "Data Analysis<br>& Data Science"
   location         : #
   email            : #
   links:
