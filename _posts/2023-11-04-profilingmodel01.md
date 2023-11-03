@@ -5,7 +5,9 @@ categories: Profile_model
 tag: [EDA, NLP]
 ---
 {: .notice--primary} 
-온라인 텍스트를 바탕으로 작성자의 성별/연령 등 인구 통계적 특성을 추정하는 모델을 개발
+**Part 01. 한국어 온라인 텍스트에 대한 탐색적 연구**<br>
+기존 NLP와 LLM의 한국어 자연어 처리에 대한 대안 제시(변수 개발)
+
 <br>
 ## h2 큰 제목+밑줄
 콘텐츠1
