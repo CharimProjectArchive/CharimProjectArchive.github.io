@@ -19,8 +19,8 @@ locale                   : "en-US"
 title                    : "Thanks for visit!"
 title_separator          : "-"
 subtitle                 : # site tagline that appears below site title in masthead
-name                     : "Project Archive"
-description              : "Data Analysis & Data Science"
+name                     : #
+description              : #
 url                      : "https://charimprojectarchive.github.io"
 baseurl                  : # the subpath of your site, e.g. "/blog"
 repository               : # GitHub username/repo-name e.g. "mmistakes/minimal-mistakes"
@@ -104,11 +104,11 @@ analytics:
 
 # Site Author
 author:
-  name             : "Your Name"
+  name             : "Project Archive"
   avatar           : # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
-  bio              : "I am an **amazing** person."
-  location         : "Somewhere"
-  email            :
+  bio              : "Data Analysis & Data Science"
+  location         : "Seoul"
+  email            : "sjad132@naver.com"
   links:
     - label: "Email"
       icon: "fas fa-fw fa-envelope-square"
