@@ -16,10 +16,10 @@ minimal_mistakes_skin    : "default" # "air", "aqua", "contrast", "dark", "dirt"
 
 # Site Settings
 locale                   : "ko-KR"
-title                    : "Project Archice"
+title                    : "Project Archive"
 title_separator          : "|"
 subtitle                 : # site tagline that appears below site title in masthead
-name                     : #
+name                     : "Charim's Project Archive"
 description              : "데이터분석 및 데이터사이언스 프로젝트 아카이브입니다"
 url                      : "https://charimprojectarchive.github.io"
 baseurl                  : # the subpath of your site, e.g. "/blog"
