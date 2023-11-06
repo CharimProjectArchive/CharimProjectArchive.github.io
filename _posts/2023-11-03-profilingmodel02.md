@@ -5,7 +5,7 @@ categories: Project:Profileing_model
 tag: [Feature Engineering, NLP]
 ---
 #NLP #Feature Engineering #자연어 계량 #분석/모델링을 위한 변수개발 #카카오톡 오픈채팅 대화 메시지
-***
+<hr>
 
 {: .notice--primary} 
 💡**프로젝트 배경**<br>
