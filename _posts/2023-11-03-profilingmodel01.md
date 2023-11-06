@@ -380,7 +380,7 @@ full_df
 </table>
 <p>3835493 rows × 6 columns</p>
 </div>
-
+<br><br>
 ## 기초 탐색
 - 문장 길이, feautre 별 분포 확인
 
