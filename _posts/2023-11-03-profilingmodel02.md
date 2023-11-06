@@ -4,6 +4,9 @@ title:  "Part 01. 온라인 메시지 작성자 프로파일링 모델 개발: �
 categories: Project:Profileing_model
 tag: [Feature Engineering, NLP]
 ---
+#NLP #Feature Engineering #자연어 계량 #분석/모델링을 위한 변수개발 #카카오톡 오픈채팅 대화 메시지
+***
+
 {: .notice--primary} 
 💡**프로젝트 배경**<br>
 
