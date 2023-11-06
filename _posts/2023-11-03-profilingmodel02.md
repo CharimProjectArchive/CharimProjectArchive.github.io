@@ -83,7 +83,7 @@ tag: [NLP, 불용어처리, 표제화, 토크니제이션, 변수개발]
 
 
 
-## 특수표현 복잡도 계산
+## 특수표현 복잡도 측정
 - 불용어 처리/표제화 전에 수행
 - 자음 또는 모음으로 구성된 불완전 표현 / 문장기호, 특수기호, 이모지 표현을 구분하여 측정
 - 문장에서 출현하는 특수표현의 개수, 평균, 표준편차, 최대값, 최소값을 계산
@@ -106,7 +106,7 @@ df = pd.read_csv("SNS_FULL_Dataset(raw_중복된 메세지 제거).csv")
 
 
 
-### 자음 또는 모음으로 구성된 불완전 표현의 복잡도 측정
+### 자음 또는 모음으로 구성된 불완전 표현의 복잡도
 
 
 ```python
@@ -122,8 +122,32 @@ def spell_complexity(sentence):
             spell_list = []
             for s in seq:
                 spell_list.append(s)  
+```
 
-정
+
+
+
+```python
+print(spell_complexity('안녕 ㅠㅠ ㅠㅠㅠ ㅠㅜ ㅇㅋㅇㅋ ㄷㅋ-ㅁㅁ- ㅠ'))
+```
+
+    (7, 1.3451969221982076, 0.9131088298012547, 2.772588722239781, 0.0)
+
+
+
+
+```python
+print(spell_complexity('안 ㅠㅠ ㅋㅋㅋ'))
+```
+
+    (2, 0.8958797346140275, 0.20273255405408225, 1.0986122886681098, 0.6931471805599453)
+
+
+
+
+# 문장기호, 특수기호, 이모지 표현에 대한 복잡도
+
+
 
 
 ```python
@@ -190,6 +214,7 @@ print(symbol_complexity('ㅠㅠ 안녕😘😘😘 😘😘'))
 
 
 ```python
+#데이터프레임 컬럼값으로 변환
 df['spell_complexity'] = df['contents'].progress_apply(lambda x:spell_complexity(str(x)))
 df['spell_num'] = df['spell_complexity'].progress_apply(lambda x:x[0])
 df['spell_mean'] = df['spell_complexity'].progress_apply(lambda x:x[1])
