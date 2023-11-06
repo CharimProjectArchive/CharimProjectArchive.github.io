@@ -1,4 +1,4 @@
-[01-1. Json2csv Convertor(SNS 200만).md](https://github.com/charimprojectarchive/charimprojectarchive.github.io/files/13262319/01-1.Json2csv.Convertor.SNS.200.md)---
+---
 layout: single
 title:  "Part 01. 한국어 온라인 텍스트에 대한 탐색적 연구"
 categories: Project:Profileing_model
@@ -8,9 +8,9 @@ tag: [EDA, NLP]
 1. 한국어 온라인 문체에서의 성별/연령 별 특징 분석 <br>
 2. 기존 NLP 및 LLM의 한국어 자연어 처리에 대한 한계 파악/대안 제시(변수 개발)<br>
 
-## 데이터 처리
+## 데이터 정
 - **출처**: AIHUB, 한국어 SNS 데이터셋
-    - **다운로드 링크:** https://www.aihub.or.kr/aihubdata/data/view.do?currMenu=115&topMenu=100&aihubDataSe=realm&dataSetSn=114
+    - **다운로드 링크:** <a herf = https://www.aihub.or.kr/aihubdata/data/view.do?currMenu=115&topMenu=100&aihubDataSe=realm&dataSetSn=114>AIHUB 한국어 SNS 데이터셋</a>
 <br><br>
 - **데이터 속성:** 화자 성별, 연령대, 거주지역, 대화 유형, 대화 주제, 발신 시간/순서 포함
     - **일상 대화 200만 건**
