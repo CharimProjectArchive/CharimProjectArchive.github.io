@@ -42,13 +42,13 @@ tag: [NLP, 불용어처리, 표제화, 토크니제이션, 변수개발]
 - **Relative Bias(RB, 상대 편향도)**: 표현 t가 등장 했을 때, 텍스트의 **작성자가 특정 성별/연령인 정도**를 설명함<br>
   - **Relative Bias of Gender**(RBG, 상별에 대한 상대 편향도)<br>
   표현 $t_i$ 가 등장한 문장 $s$ 의 작성자 성별이 남자 $male$ 또는 여자 $female$ 인 정도<br>
-  > $RBG_i = ln[ p( s_{male} ⏐ t_i∈s_{male} ) / p( s_{female} ⏐ t_i∈s_{female} ) ]$
-  > - $t_i$ : 문서 내 i번 째 표현<br>
-  > - $s_{male}$ : 작성자의 성별이 남성(m)인 문장
-  > - $s_{female}$ : 작성자의 성별이 여성(f)인 문장
-  >  <br>
-  > 작성자의 성별이 남성인 문장 $s_{male}$ 에서 표현 $t_i$ 가 등장한 비율 ÷ 여성인 문장 $s_{female}$ 에서 표현 $t_i$ 가 등장한 비율, 0~1 사이의 Skewed한 값을 가짐으로 log를 취해 정규화
-  > ⇒ $t_i$ 가 등장했을 때 작성자의 성별이 남자 $m$ 또는 여자 $f$ 인 정도
+  $RBG_i = ln[ p( s_{male} ⏐ t_i∈s_{male} ) / p( s_{female} ⏐ t_i∈s_{female} ) ]$
+  - $t_i$ : 문서 내 i번 째 표현<br>
+  - $s_{male}$ : 작성자의 성별이 남성(m)인 문장
+  - $s_{female}$ : 작성자의 성별이 여성(f)인 문장
+  <br>
+  작성자의 성별이 남성인 문장 $s_{male}$ 에서 표현 $t_i$ 가 등장한 비율 ÷ 여성인 문장 $s_{female}$ 에서 표현 $t_i$ 가 등장한 비율, 0~1 사이의 Skewed한 값을 가짐으로 log를 취해 정규화<br>
+  ⇒ $t_i$ 가 등장했을 때 작성자의 성별이 남자 $m$ 또는 여자 $f$ 인 정도
   <br>    
   
   - **Relative Bias of Age**(RBG, 연령에 대한 상대 편향도)<br>
