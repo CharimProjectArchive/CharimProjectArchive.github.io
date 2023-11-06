@@ -544,34 +544,33 @@ df['contents'] = df['contents'].progress_apply(duplicated_spelling_reduction)
     100%|████████████████████████████████████████████████████████████████████████████| 3564042/3564042 [02:02<00:00, 29125.25it/s]
     
 <br><br>
-### 공백(중복 띄어쓰기)/5어절 미만 문장 제거
+### 연속된 띄어쓰기 처리/5어절 미만 문장 제거
 
 
 ```python
-#띄어쓰기 문장 제거
+#연속되 띄어쓰기 처리
 df['contents'] = df['contents'].apply(lambda x : re.sub(r'\s', ' ', x))  #띄어쓰기 중복 ''로 변경
 mask = df['contents'].isin([' '])
 df = df[~mask].reset_index(drop = True) 
 deleted_white = df.shape[0]
 white = deleted_dup - deleted_white
 print("- white space data: {:,}({}%)".format(white, round(white/deleted_dup*100, 2)))
+```
 
-#어절 카운팅
-df['word_bunch'] = df['contents'].apply(lambda x: len(x.split(' ')))
+    - white space data: 0(0.0%)
 
 
+```python
 #5어절 미만 문장 제거
+df['word_bunch'] = df['contents'].apply(lambda x: len(x.split(' '))) # 어절 카운팅
+
 cutoff = df.loc[df['word_bunch'] < 5].shape[0] 
 df = df.loc[df['word_bunch'] >= 5] 
 deleted_cutoff = df.shape[0]
 print("- cutoff data: {:,}({}%)".format(cutoff, round(cutoff/deleted_white*100, 2)))
-
-print("- total processed data: {:,}".format(deleted_cutoff))
 ```
 
-    - white space data: 0(0.0%)
     - cutoff data: 61,130(1.72%)
-    - total processed data: 3,502,912
 
 
 
