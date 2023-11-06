@@ -9,7 +9,6 @@ tag: [EDA, NLP]
 2. 기존 NLP 및 LLM의 한국어 자연어 처리에 대한 한계 파악/대안 제시(변수 개발)<br>
 
 ## 데이터 처리
----
 - **출처**: AIHUB, 한국어 SNS 데이터셋
     - **다운로드 링크:** https://www.aihub.or.kr/aihubdata/data/view.do?currMenu=115&topMenu=100&aihubDataSe=realm&dataSetSn=114
 <br><br>
