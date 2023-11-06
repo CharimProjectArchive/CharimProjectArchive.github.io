@@ -851,24 +851,24 @@ Occur_dic
       <td>에(Josa)</td>
       <td>에</td>
       <td>Josa</td>
-      <td>1376727</td>
-      <td>0.393024</td>
+      <td>1307922</td>
+      <td>0.373381</td>
     </tr>
     <tr>
       <th>3</th>
       <td>가(Josa)</td>
       <td>가</td>
       <td>Josa</td>
-      <td>1144262</td>
-      <td>0.326660</td>
+      <td>1142959</td>
+      <td>0.326288</td>
     </tr>
     <tr>
       <th>4</th>
       <td>이(Josa)</td>
       <td>이</td>
       <td>Josa</td>
-      <td>919870</td>
-      <td>0.262602</td>
+      <td>913782</td>
+      <td>0.260864</td>
     </tr>
     <tr>
       <th>...</th>
@@ -879,48 +879,48 @@ Occur_dic
       <td>...</td>
     </tr>
     <tr>
-      <th>18376</th>
-      <td>방울토마토(Noun)</td>
-      <td>방울토마토</td>
-      <td>Noun</td>
-      <td>351</td>
-      <td>0.000100</td>
-    </tr>
-    <tr>
-      <th>18377</th>
-      <td>하노이(Noun)</td>
-      <td>하노이</td>
-      <td>Noun</td>
-      <td>351</td>
-      <td>0.000100</td>
-    </tr>
-    <tr>
-      <th>18378</th>
-      <td>젭(Noun)</td>
-      <td>젭</td>
-      <td>Noun</td>
-      <td>351</td>
-      <td>0.000100</td>
-    </tr>
-    <tr>
-      <th>18379</th>
-      <td>낀데(Verb)</td>
-      <td>낀데</td>
+      <th>18142</th>
+      <td>오는구나(Verb)</td>
+      <td>오는구나</td>
       <td>Verb</td>
       <td>351</td>
       <td>0.000100</td>
     </tr>
     <tr>
-      <th>18380</th>
-      <td>다른팀(Noun)</td>
-      <td>다른팀</td>
+      <th>18143</th>
+      <td>the(Alpha)</td>
+      <td>the</td>
+      <td>Alpha</td>
+      <td>351</td>
+      <td>0.000100</td>
+    </tr>
+    <tr>
+      <th>18144</th>
+      <td>문상(Noun)</td>
+      <td>문상</td>
+      <td>Noun</td>
+      <td>351</td>
+      <td>0.000100</td>
+    </tr>
+    <tr>
+      <th>18145</th>
+      <td>앚(Noun)</td>
+      <td>앚</td>
+      <td>Noun</td>
+      <td>351</td>
+      <td>0.000100</td>
+    </tr>
+    <tr>
+      <th>18146</th>
+      <td>센트럴(Noun)</td>
+      <td>센트럴</td>
       <td>Noun</td>
       <td>351</td>
       <td>0.000100</td>
     </tr>
   </tbody>
 </table>
-<p>18381 rows × 5 columns</p>
+<p>18147 rows × 5 columns</p>
 
 
 
