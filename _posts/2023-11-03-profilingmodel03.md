@@ -1,6 +1,6 @@
 ---
 layout: single
-title:  "Part 02. 온라인 메시지 작성자 프로파일링 모델 개발: 모델링"
+title:  "Part 03. 온라인 메시지 작성자 프로파일링 모델 개발: 모델 테스트"
 categories: Project:프로파일링_모델_개발
 tag: [Feature Engineering, NLP]
 ---
