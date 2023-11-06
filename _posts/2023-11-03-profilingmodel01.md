@@ -1,11 +1,11 @@
 ---
 layout: single
-title:  "Part 00. 한국어 온라인 텍스트에 대한 탐색적 연구"
+title:  "Part 00. 한국어 온라인 텍스트에 대한 탐색적 연구: 데이터셋 기초 탐색"
 categories: Project:Profileing_model
 tag: [EDA, NLP]
 ---
 {: .notice--primary} 
-&nbsp;&nbsp;1. 데이터셋 설명 및 기본 탐색 <br>
+&nbsp;&nbsp;1. 데이터셋 설명 및 기초 탐색 <br>
 
 ## 데이터 정보
 - **출처**: [AIHUB, 한국어 SNS 데이터셋](https://www.aihub.or.kr/aihubdata/data/view.do?currMenu=115&topMenu=100&aihubDataSe=realm&dataSetSn=114)
