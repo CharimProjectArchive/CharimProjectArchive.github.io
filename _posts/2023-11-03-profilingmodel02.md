@@ -1204,25 +1204,13 @@ def restore_pos(tokenized_sentence):
 ```python
 tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(fix_foreign)
 tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(fix_suffix_Noun)
-```
-
-    100%|████████████████████████████████████████████████████████████████████████████| 3502912/3502912 [03:24<00:00, 17136.46it/s]
-    100%|███████████████████████████████████████████████████████████████████████████| 3502912/3502912 [00:24<00:00, 141968.25it/s]
-
-
-
-
-
-```python
 tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(restore_pos)
 tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(restore_pos)
 tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(fix_suffix_Noun2)
 ```
 
-    100%|█████████████████████████████████████████████████████████████████████████████| 3502912/3502912 [07:24<00:00, 7883.51it/s]
-    100%|████████████████████████████████████████████████████████████████████████████| 3502912/3502912 [05:36<00:00, 10400.00it/s]
-    100%|███████████████████████████████████████████████████████████████████████████| 3502912/3502912 [00:13<00:00, 265000.73it/s]
-
+    100%|████████████████████████████████████████████████████████████████████████████| 3502912/3502912 [03:24<00:00, 17136.46it/s]
+    ...생략...
 
 ```python
 tokenized_df.to_csv('350만_Tokenized.csv(pos 교정)', index = False)
