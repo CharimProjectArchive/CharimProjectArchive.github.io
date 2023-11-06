@@ -579,7 +579,7 @@ df.to_csv('SNS_FULL_Dataset(텍스트 전처리).csv', index=False)
 ```
 
 
-
+<br><br>
 ### 토크나이즈
 
 
@@ -618,6 +618,7 @@ for d in df_li:
     
 tokenized_df = pd.concat(df_li, ignore_index=True)
 tokenized_df = tokenized_df.drop(columns={'tokenized'})
+tokenized_df[['sex', 'age', 'contents', 'tokenized', 'token_count']]
 ```
 
     100%|████████████████████████████████████████████████████████████████████████████████| 600000/600000 [36:11<00:00, 276.37it/s]
@@ -632,24 +633,9 @@ tokenized_df = tokenized_df.drop(columns={'tokenized'})
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>topic</th>
       <th>sex</th>
       <th>age</th>
-      <th>resident</th>
       <th>contents</th>
-      <th>length</th>
-      <th>spell_num</th>
-      <th>spell_mean</th>
-      <th>spell_std</th>
-      <th>spell_kurt</th>
-      <th>spell_skewn</th>
-      <th>symbol_num</th>
-      <th>symbol_mean</th>
-      <th>symbol_std</th>
-      <th>symbol_kurt</th>
-      <th>symbol_skewn</th>
-      <th>contents_length</th>
-      <th>word_bunch</th>
       <th>tokenized</th>
       <th>token_count</th>
     </tr>
@@ -657,116 +643,41 @@ tokenized_df = tokenized_df.drop(columns={'tokenized'})
   <tbody>
     <tr>
       <th>0</th>
-      <td>개인및관계</td>
       <td>여성</td>
       <td>20대</td>
-      <td>경기도</td>
       <td>나지금밥머거2시간걸어서 번화가찾았어..ㅜㅜ 잉ㅜㅜ ㅎㅎㅎㅎ오좋겠네 ㅋㄱㅋㄱㄱㄱㄱ아니...</td>
-      <td>127</td>
-      <td>6</td>
-      <td>2.185021</td>
-      <td>1.299761</td>
-      <td>-1.808233</td>
-      <td>-0.009222</td>
-      <td>4</td>
-      <td>0.173287</td>
-      <td>0.300142</td>
-      <td>-1.808233</td>
-      <td>-0.009222</td>
-      <td>127</td>
-      <td>16</td>
       <td>나(Noun), 지금(Noun), 밥(Noun), 머거(Verb), 2시간(Numb...</td>
       <td>54</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>개인및관계</td>
       <td>남성</td>
       <td>20대</td>
-      <td>경기도</td>
       <td>헐 ㅠㅠ 언넝호텔들가ㅠㅠ 엄청피건할첸데 나는인낫러요 나 두시출근이다ㅎㅎㅎㅎ 퀵으로한...</td>
-      <td>130</td>
-      <td>6</td>
-      <td>0.961387</td>
-      <td>0.555163</td>
-      <td>-1.059126</td>
-      <td>-0.488576</td>
-      <td>6</td>
-      <td>2.041180</td>
-      <td>1.296771</td>
-      <td>-1.059126</td>
-      <td>-0.488576</td>
-      <td>130</td>
-      <td>18</td>
       <td>헐(Verb), ㅠㅠ(KoreanParticle), 언(Modifier), 넝(No...</td>
       <td>49</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>개인및관계</td>
       <td>여성</td>
       <td>20대</td>
-      <td>경기도</td>
       <td>학생이면좋구! 왜혼자다니냐고오..... 와 내친군학교나감 ㅋㅋㅋㅋㅋ 그르네 막졸업한...</td>
-      <td>56</td>
-      <td>1</td>
-      <td>2.197225</td>
-      <td>0.000000</td>
-      <td>-3.000000</td>
-      <td>0.000000</td>
-      <td>3</td>
-      <td>1.404043</td>
-      <td>1.072424</td>
-      <td>-3.000000</td>
-      <td>0.000000</td>
-      <td>56</td>
-      <td>7</td>
       <td>학생(Noun), 이(Suffix), 면(Josa), 좋구(Adjective), !...</td>
       <td>25</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>개인및관계</td>
       <td>남성</td>
       <td>20대</td>
-      <td>경기도</td>
       <td>훔 학생 없는데...주변에... 아니 복학하고 학교를 못가는데 어케 친구가있냐.. ...</td>
-      <td>74</td>
-      <td>1</td>
-      <td>2.079442</td>
-      <td>0.000000</td>
-      <td>-3.000000</td>
-      <td>0.000000</td>
-      <td>4</td>
-      <td>0.997246</td>
-      <td>0.175572</td>
-      <td>-3.000000</td>
-      <td>0.000000</td>
-      <td>74</td>
-      <td>15</td>
       <td>훔(Noun), 학생(Noun), 없는데(Adjective), ...(Punctua...</td>
       <td>31</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>개인및관계</td>
       <td>여성</td>
       <td>30대</td>
-      <td>충청북도</td>
       <td>참나 내가뭐얼마나그랬다고 웃기는사람이야지짜 너무화난당.. 근데오빠는말을또 잘해서 내...</td>
-      <td>146</td>
-      <td>2</td>
-      <td>0.693147</td>
-      <td>0.000000</td>
-      <td>-3.000000</td>
-      <td>0.000000</td>
-      <td>1</td>
-      <td>0.693147</td>
-      <td>0.000000</td>
-      <td>-3.000000</td>
-      <td>0.000000</td>
-      <td>146</td>
-      <td>19</td>
       <td>참나(Noun), 내(Noun), 가(Josa), 뭐(Noun), 얼마나(Noun)...</td>
       <td>63</td>
     </tr>
