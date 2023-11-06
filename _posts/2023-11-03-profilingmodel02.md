@@ -721,8 +721,8 @@ tokenized_df.to_csv('350만_Tokenized.csv', index = False)
 <br><br>
 ### 토큰 빈도수 딕셔너리 구축 및 스크리닝
 **딕셔너리 구축**
-- 빈도수 0.0001 이상의 토큰만 사용<br>
-  
+- 빈도수 0.0001 이상의 토큰만 사용
+[토큰 딕셔너리](https://docs.google.com/spreadsheets/d/1wKv4hAfJD_ToORv1Q7QGWsCjYUQTZKHRzZMNCxVPvZ4/edit?usp=sharing)
 
 **스크리닝 결과**
 - Okt 딕셔너리에 포함되지 않은 표현이 파괴됨<br>
