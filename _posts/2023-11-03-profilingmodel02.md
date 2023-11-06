@@ -1216,3 +1216,893 @@ tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(fix_suffix_
 tokenized_df.to_csv('350만_Tokenized.csv(pos 교정)', index = False)
 ```
 
+
+
+
+<br><br>
+### 03. 상대 편향도/상대 빈출도 딕셔너리 구축
+#### 1. 형태소 재분류한 토큰 딕셔너리 생성
+
+
+```python
+#메모리아웃 되는 것을 방지하기 위해 데이터를 일정 크기 이하로 Split
+def split_dataframe(dataframe):
+    total_length = len(dataframe)
+    splited_li = []  # splited_li는 반드시 초기화되어야 합니다.
+
+    if len(dataframe) > 100000:
+        split_size = 100000
+        num_split = total_length // split_size + 1
+
+        for i in range(num_split):
+            start_idx = i * split_size
+            end_idx = (i + 1) * split_size
+            try:
+                splited = dataframe[start_idx:end_idx]
+            except:
+                splited = dataframe[start_idx:]
+
+            # 작은 그룹을 리스트에 추가
+            splited_li.append(splited)
+    else:
+        splited_li.append(dataframe)
+    return splited_li
+```
+
+
+```python
+def occur_countor(df):
+    total_length = len(df)
+    splited_li = split_dataframe(df)
+
+    Occur_dict = {}
+    for splited_df in splited_li: 
+        merge_list = []
+        for index, row in tqdm(splited_df.iterrows(), total=len(splited_df), desc="전체 토큰 병합", mininterval=0.1):
+            token_list = row['tokenized'].split(', ')
+            for token in token_list:
+                merge_list.append(token)
+
+        count_list = Counter(merge_list).most_common()
+
+        sort_arry = []
+        for d, c in tqdm(count_list, total=len(count_list), desc="빈도순 정렬", mininterval=0.1):
+            for i in range(c):
+                sort_arry.append(d)
+
+        unique_dic = Counter(sort_arry)
+        unique_token = list(unique_dic.keys())
+        unique_freq = list(unique_dic.values())
+        
+        for key, value in zip(unique_token, unique_freq):  # zip을 사용하여 두 리스트를 동시에 순회
+            if key in Occur_dict:
+                Occur_dict[key] += value
+            else:
+                Occur_dict[key] = value
+
+    token_li = Occur_dict.keys()
+    freq_li = Occur_dict.values()
+
+    Occur_dic = pd.DataFrame({'Token': token_li, 'Token_freq': freq_li})
+    Occur_dic = Occur_dic.sort_values(by=['Token_freq'], ascending=False).reset_index(drop=True) 
+    Occur_dic['Total_ratio'] = Occur_dic['Token_freq'].apply(lambda x: x/total_length)
+    Occur_dic = Occur_dic.loc[Occur_dic['Total_ratio'] >= 0.0001]
+    return Occur_dic
+```
+
+
+```python
+Occur_dic = occur_countor(tokenized_df)
+Occur_dic
+```
+
+    전체 토큰 병합: 100%|██████████████████████████████████████████████████████████████| 100000/100000 [00:04<00:00, 23878.38it/s]
+    빈도순 정렬: 100%|████████████████████████████████████████████████████████████████| 212146/212146 [00:00<00:00, 502799.24it/s]
+    ...생략...
+
+
+
+
+```python
+Occur_dic.to_csv('350만_Occur_dic(pos 교정).csv', index=False)
+```
+
+
+<br><br>
+#### 2. 성별/연령에 따른 토큰의 상대 빈출도 및 상대 편향도 계산
+
+
+```python
+def feature_extractor(Data, Occur_dict , col, Feature_list):
+    token_dic = Occur_dict['Token'].to_list()
+    
+    merged_df = pd.DataFrame()
+    merged_df['Token'] = Occur_dict['Token']
+    for feature in Feature_list:
+        feature_df = Data.loc[Data[f'{col}'] == feature]
+
+        Token_Freq_in_feature_Documents = [0 for i in range(len(token_dic))] # 특성 문서에서 특정 토큰이 출현한 횟수 
+        feature_Documents_Freq_by_Token = [0 for i in range(len(token_dic))] # 특정 토큰이 출현한 특성 문서의 수
+        
+        total_length = len(feature_df)
+        splited_li = split_dataframe(feature_df)
+
+        for batch, splited_df in enumerate(splited_li):  
+            for index, row in tqdm(splited_df.iterrows(), total=len(splited_df), desc=f"{feature}_{batch+1}/{len(splited_li)}", mininterval=0.1):
+                token_list = row['tokenized'].split(', ') # 문서 토크나이징  
+
+                for token in token_list: # 문서에서 특정 토큰이 출현한 수
+                    if token in token_dic:
+                        idx = token_dic.index(token)
+                        Token_Freq_in_feature_Documents[idx] += 1
+
+                    else:
+                        pass
+
+                uniqe_token_list = list(set(token_list)) # 토크나이징 된 문장에서 고유한 토큰만 남김, 한 문서에서 동일한 토큰이 여러번 카운팅 되는 것을 방지
+                for uniqe_token in uniqe_token_list: # 특정 토큰이 출현한 문서의 수
+                    if uniqe_token in token_dic: 
+                        idx = token_dic.index(uniqe_token)
+                        feature_Documents_Freq_by_Token[idx] += 1
+                    else:
+                        pass  
+
+        Token_Freq_in_feature_Documents_list = []
+        for f in Token_Freq_in_feature_Documents:
+            if f == 0:
+                f = 0.1
+            else:
+                pass
+            Token_Freq_in_feature_Documents_list.append(f)
+
+        feature_Documents_Freq_by_Token_list = []
+        for b in feature_Documents_Freq_by_Token:
+            if b == 0:
+                b = 0.1
+            else:
+                pass
+            feature_Documents_Freq_by_Token_list.append(b)
+        
+        feature_df = pd.DataFrame()
+        feature_df['Token'] = Occur_dic['Token']
+        
+        feature_Documents_num = len(feature_df)
+        feature_df[f'Freq_{feature}'] = Token_Freq_in_feature_Documents_list #성별에 따른 토큰 출현 빈도
+        feature_df[f'Freq_ratio_{feature}'] = np.array(feature_df[f'Freq_{feature}'])/feature_Documents_num #성별에 따른 토큰 출현율
+        feature_df[f'Bias_{feature}'] = feature_Documents_Freq_by_Token_list #특정 토큰 출현 시, 작성자 성별이 'sex'인 빈도
+        feature_df[f'Bias_ratio_{feature}'] = np.array(feature_df[f'Bias_{feature}'])/feature_Documents_num #특정 토큰 출현 시, 작성자 성별이 'sex'인 비율
+    
+        merged_df = pd.merge(merged_df, feature_df, how='left', on='Token')
+    return merged_df 
+```
+
+
+```python
+gender_class = ['남성', '여성']
+gender_dic = feature_extractor(df, Occur_dic, 'sex', gender_class)
+gender_dic
+```
+
+    남성_1/8: 100%|██████████████████████████████████████████████████████████████████████| 100000/100000 [11:33<00:00, 144.14it/s]
+    ...생략...
+
+
+
+
+```python
+age_class = ['20대 미만', '20대', '30대', '40대', '50대', '60대', '70대 이상'] #
+age_dic = feature_extractor(df, Occur_dic, 'age', age_class)
+age_dic
+```
+
+    20대 미만_1/2: 100%|█████████████████████████████████████████████████████████████████| 100000/100000 [11:40<00:00, 142.79it/s]
+    ...생략...
+
+
+
+
+```python
+other_dic = pd.DataFrame()
+other_dic['Token'] = age_dic['Token']
+
+other10_Douments_num = len(df.loc[df['age'] != '20대 미만'])
+other_dic['Freq_ratio_other10'] = (age_dic['Freq_20대'] + age_dic['Freq_30대'] + age_dic['Freq_40대'] + age_dic['Freq_50대'] + age_dic['Freq_60대'] + age_dic['Freq_70대 이상']) / other10_Douments_num # 
+other_dic['Bias_ratio_other10'] = (age_dic['Bias_20대'] + age_dic['Bias_30대'] + age_dic['Bias_40대'] + age_dic['Bias_50대'] + age_dic['Bias_60대'] + age_dic['Bias_70대 이상']) / other10_Douments_num # 
+
+other20_Douments_num = len(df.loc[df['age'] != '20대'])
+other_dic['Freq_ratio_other20'] = (age_dic['Freq_20대 미만'] + age_dic['Freq_30대'] + age_dic['Freq_40대'] + age_dic['Freq_50대'] + age_dic['Freq_60대'] + age_dic['Freq_70대 이상']) / other20_Douments_num # 
+other_dic['Bias_ratio_other20'] = (age_dic['Bias_20대 미만'] + age_dic['Bias_30대'] + age_dic['Bias_40대'] + age_dic['Bias_50대'] + age_dic['Bias_60대'] + age_dic['Bias_70대 이상']) / other20_Douments_num # 
+
+other30_Douments_num = len(df.loc[df['age'] != '30대'])
+other_dic['Freq_ratio_other30'] = (age_dic['Freq_20대 미만'] + age_dic['Freq_20대'] + age_dic['Freq_40대'] + age_dic['Freq_50대'] + age_dic['Freq_60대'] + age_dic['Freq_70대 이상']) / other30_Douments_num # 
+other_dic['Bias_ratio_other30'] = (age_dic['Bias_20대 미만'] + age_dic['Bias_20대'] + age_dic['Bias_40대'] + age_dic['Bias_50대'] + age_dic['Bias_60대'] + age_dic['Bias_70대 이상']) / other30_Douments_num # 
+
+other40_Douments_num = len(df.loc[df['age'] != '40대'])
+other_dic['Freq_ratio_other40'] = (age_dic['Freq_20대 미만'] + age_dic['Freq_20대'] + age_dic['Freq_30대'] + age_dic['Freq_50대'] + age_dic['Freq_60대'] + age_dic['Freq_70대 이상']) / other40_Douments_num # 
+other_dic['Bias_ratio_other40'] = (age_dic['Bias_20대 미만'] + age_dic['Bias_20대'] + age_dic['Bias_30대'] + age_dic['Bias_50대'] + age_dic['Bias_60대'] + age_dic['Bias_70대 이상']) / other40_Douments_num # 
+
+other50_Douments_num = len(df.loc[df['age'] != '50대'])
+other_dic['Freq_ratio_other50'] = (age_dic['Freq_20대 미만'] + age_dic['Freq_20대'] + age_dic['Freq_30대'] + age_dic['Freq_40대'] + age_dic['Freq_60대'] + age_dic['Freq_70대 이상']) / other50_Douments_num # 
+other_dic['Bias_ratio_other50'] = (age_dic['Bias_20대 미만'] + age_dic['Bias_20대'] + age_dic['Bias_30대'] + age_dic['Bias_40대'] + age_dic['Bias_60대'] + age_dic['Bias_70대 이상']) / other50_Douments_num # 
+
+other60_Douments_num = len(df.loc[df['age'] != '60대'])
+other_dic['Freq_ratio_other60'] = (age_dic['Freq_20대 미만'] + age_dic['Freq_20대'] + age_dic['Freq_30대'] + age_dic['Freq_40대'] + age_dic['Freq_50대'] + age_dic['Freq_70대 이상']) / other60_Douments_num
+other_dic['Bias_ratio_other60'] = (age_dic['Bias_20대 미만'] + age_dic['Bias_20대'] + age_dic['Bias_30대'] + age_dic['Bias_40대'] + age_dic['Bias_50대'] + age_dic['Bias_70대 이상']) / other60_Douments_num
+
+other70_Douments_num = len(df.loc[df['age'] != '70대 이상'])
+other_dic['Freq_ratio_other70'] = (age_dic['Freq_20대 미만'] + age_dic['Freq_20대'] + age_dic['Freq_30대'] + age_dic['Freq_40대'] + age_dic['Freq_50대'] + age_dic['Freq_60대']) / other70_Douments_num
+other_dic['Bias_ratio_other70'] = (age_dic['Bias_20대 미만'] + age_dic['Bias_20대'] + age_dic['Bias_30대'] + age_dic['Bias_40대'] + age_dic['Bias_50대'] + age_dic['Bias_60대']) / other70_Douments_num
+
+other_dic
+```
+
+
+
+```python
+relative_dic = pd.DataFrame()
+relative_dic['Token'] = Occur_dic['Token']
+relative_dic['Token_freq'] = Occur_dic['Token_freq']
+relative_dic['Total_ratio'] = Occur_dic['Total_ratio']
+
+#성별에 대한 
+relative_dic['Gender_Freq'] = np.log(gender_dic['Freq_ratio_남성']/gender_dic['Freq_ratio_여성']) # 성별 상대 빈출도
+relative_dic['Gender_Bias'] = np.log(gender_dic['Bias_ratio_남성']/gender_dic['Bias_ratio_여성']) # 성별 상대 편향도
+
+
+#연령에 대한
+relative_dic['A10_Freq'] = np.log(age_dic['Freq_ratio_20대 미만']/other_dic['Freq_ratio_other10']) 
+relative_dic['A10_Bias'] = np.log(age_dic['Bias_ratio_20대 미만']/other_dic['Bias_ratio_other10']) 
+
+relative_dic['A20_Freq'] = np.log(age_dic['Freq_ratio_20대']/other_dic['Freq_ratio_other20']) 
+relative_dic['A20_Bias'] = np.log(age_dic['Bias_ratio_20대']/other_dic['Bias_ratio_other20']) 
+
+relative_dic['A30_Freq'] = np.log(age_dic['Freq_ratio_30대']/other_dic['Freq_ratio_other30']) 
+relative_dic['A30_Bias'] = np.log(age_dic['Bias_ratio_30대']/other_dic['Bias_ratio_other30'])
+
+relative_dic['A40_Freq'] = np.log(age_dic['Freq_ratio_40대']/other_dic['Freq_ratio_other40']) 
+relative_dic['A40_Bias'] = np.log(age_dic['Bias_ratio_40대']/other_dic['Bias_ratio_other40'])
+
+relative_dic['A50_Freq'] = np.log(age_dic['Freq_ratio_50대']/other_dic['Freq_ratio_other50']) 
+relative_dic['A50_Bias'] = np.log(age_dic['Bias_ratio_50대']/other_dic['Bias_ratio_other50'])
+
+relative_dic['A60_Freq'] = np.log(age_dic['Freq_ratio_60대']/other_dic['Freq_ratio_other60']) 
+relative_dic['A60_Bias'] = np.log(age_dic['Bias_ratio_60대']/other_dic['Bias_ratio_other60'])
+
+relative_dic['A70_Freq'] = np.log(age_dic['Freq_ratio_70대 이상']/other_dic['Freq_ratio_other70']) 
+relative_dic['A70_Bias'] = np.log(age_dic['Bias_ratio_70대 이상']/other_dic['Bias_ratio_other70'])
+
+relative_dic
+```
+
+
+
+
+<div>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Token</th>
+      <th>Token_freq</th>
+      <th>Total_ratio</th>
+      <th>Gender_Freq</th>
+      <th>Gender_Bias</th>
+      <th>A10_Freq</th>
+      <th>A10_Bias</th>
+      <th>A20_Freq</th>
+      <th>A20_Bias</th>
+      <th>A30_Freq</th>
+      <th>A30_Bias</th>
+      <th>A40_Freq</th>
+      <th>A40_Bias</th>
+      <th>A50_Freq</th>
+      <th>A50_Bias</th>
+      <th>A60_Freq</th>
+      <th>A60_Bias</th>
+      <th>A70_Freq</th>
+      <th>A70_Bias</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>?(Punctuation)</td>
+      <td>1865214</td>
+      <td>0.532475</td>
+      <td>-1.092652</td>
+      <td>-1.125282</td>
+      <td>1.582501</td>
+      <td>1.639460</td>
+      <td>4.709142</td>
+      <td>4.815958</td>
+      <td>3.807751</td>
+      <td>3.728915</td>
+      <td>1.845276</td>
+      <td>1.620177</td>
+      <td>1.337092</td>
+      <td>1.128453</td>
+      <td>-0.383700</td>
+      <td>-0.437217</td>
+      <td>-2.976230</td>
+      <td>-2.885823</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ㅋㅋㅋㅋㅋ(KoreanParticle)</td>
+      <td>1526323</td>
+      <td>0.435730</td>
+      <td>-1.762353</td>
+      <td>-1.680824</td>
+      <td>1.680877</td>
+      <td>1.665422</td>
+      <td>4.995337</td>
+      <td>5.072039</td>
+      <td>3.763199</td>
+      <td>3.676334</td>
+      <td>-0.645103</td>
+      <td>-0.455351</td>
+      <td>-1.662415</td>
+      <td>-1.496536</td>
+      <td>-3.916414</td>
+      <td>-3.791524</td>
+      <td>-11.291175</td>
+      <td>-10.853299</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>에(Josa)</td>
+      <td>1376727</td>
+      <td>0.393024</td>
+      <td>-1.354588</td>
+      <td>-1.337686</td>
+      <td>1.516475</td>
+      <td>1.556426</td>
+      <td>4.815396</td>
+      <td>4.839737</td>
+      <td>3.781199</td>
+      <td>3.756026</td>
+      <td>1.484062</td>
+      <td>1.430571</td>
+      <td>0.922323</td>
+      <td>0.894123</td>
+      <td>-0.292875</td>
+      <td>-0.305520</td>
+      <td>-3.032982</td>
+      <td>-3.025299</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>가(Josa)</td>
+      <td>1144262</td>
+      <td>0.326660</td>
+      <td>-1.330090</td>
+      <td>-1.316493</td>
+      <td>1.611810</td>
+      <td>1.626960</td>
+      <td>4.836498</td>
+      <td>4.852147</td>
+      <td>3.745612</td>
+      <td>3.730188</td>
+      <td>1.468008</td>
+      <td>1.432860</td>
+      <td>0.856439</td>
+      <td>0.860018</td>
+      <td>-0.144169</td>
+      <td>-0.195058</td>
+      <td>-2.928766</td>
+      <td>-2.935806</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>이(Josa)</td>
+      <td>919870</td>
+      <td>0.262602</td>
+      <td>-1.318207</td>
+      <td>-1.311745</td>
+      <td>1.399605</td>
+      <td>1.440919</td>
+      <td>4.757490</td>
+      <td>4.787147</td>
+      <td>3.840997</td>
+      <td>3.813802</td>
+      <td>1.523747</td>
+      <td>1.475925</td>
+      <td>1.019233</td>
+      <td>0.979362</td>
+      <td>0.074839</td>
+      <td>-0.029539</td>
+      <td>-2.691890</td>
+      <td>-2.770597</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>18376</th>
+      <td>방울토마토(Noun)</td>
+      <td>351</td>
+      <td>0.000100</td>
+      <td>-1.156432</td>
+      <td>-1.189584</td>
+      <td>0.757370</td>
+      <td>0.819779</td>
+      <td>4.677977</td>
+      <td>4.641177</td>
+      <td>3.792331</td>
+      <td>3.804885</td>
+      <td>1.889945</td>
+      <td>1.953874</td>
+      <td>2.056691</td>
+      <td>2.121012</td>
+      <td>0.084469</td>
+      <td>0.146509</td>
+      <td>-2.913589</td>
+      <td>-2.851895</td>
+    </tr>
+    <tr>
+      <th>18377</th>
+      <td>하노이(Noun)</td>
+      <td>351</td>
+      <td>0.000100</td>
+      <td>-2.611906</td>
+      <td>-2.561447</td>
+      <td>1.325085</td>
+      <td>1.304342</td>
+      <td>4.924908</td>
+      <td>4.930157</td>
+      <td>3.725054</td>
+      <td>3.693641</td>
+      <td>1.799401</td>
+      <td>1.937856</td>
+      <td>-2.925927</td>
+      <td>-2.792071</td>
+      <td>-2.917261</td>
+      <td>-2.783404</td>
+      <td>-2.914159</td>
+      <td>-2.780302</td>
+    </tr>
+    <tr>
+      <th>18378</th>
+      <td>젭(Noun)</td>
+      <td>351</td>
+      <td>0.000100</td>
+      <td>1.094817</td>
+      <td>0.994934</td>
+      <td>1.690805</td>
+      <td>1.766899</td>
+      <td>3.532114</td>
+      <td>3.610065</td>
+      <td>1.986914</td>
+      <td>2.064424</td>
+      <td>-0.627171</td>
+      <td>-0.553107</td>
+      <td>-2.925643</td>
+      <td>-2.851776</td>
+      <td>5.308203</td>
+      <td>5.208662</td>
+      <td>-2.913874</td>
+      <td>-2.840007</td>
+    </tr>
+    <tr>
+      <th>18379</th>
+      <td>낀데(Verb)</td>
+      <td>351</td>
+      <td>0.000100</td>
+      <td>-0.567459</td>
+      <td>-0.566395</td>
+      <td>1.168614</td>
+      <td>1.177345</td>
+      <td>3.912895</td>
+      <td>3.918685</td>
+      <td>4.497972</td>
+      <td>4.487001</td>
+      <td>2.050011</td>
+      <td>2.058950</td>
+      <td>0.774695</td>
+      <td>0.783376</td>
+      <td>2.491807</td>
+      <td>2.500936</td>
+      <td>-2.913589</td>
+      <td>-2.905005</td>
+    </tr>
+    <tr>
+      <th>18380</th>
+      <td>다른팀(Noun)</td>
+      <td>351</td>
+      <td>0.000100</td>
+      <td>-1.500599</td>
+      <td>-1.477266</td>
+      <td>0.466524</td>
+      <td>0.501595</td>
+      <td>5.463502</td>
+      <td>5.441308</td>
+      <td>3.345351</td>
+      <td>3.364846</td>
+      <td>0.068836</td>
+      <td>0.103804</td>
+      <td>-0.620491</td>
+      <td>-0.585624</td>
+      <td>-2.916976</td>
+      <td>-2.882200</td>
+      <td>-2.913874</td>
+      <td>-2.879098</td>
+    </tr>
+  </tbody>
+</table>
+<p>18381 rows × 19 columns</p>
+
+</div>
+
+
+
+
+```python
+def word_seperator_in_list(token):    
+    idx_arry = []
+    idx = 0
+    for t in str(token):
+        if t == '(':
+            idx_arry.append(idx)
+        else:
+            pass
+        idx += 1
+
+    s_index = idx_arry[-1]
+    w = token[:s_index]
+    return(w)
+
+def pos_seperator_in_list(token):    
+    idx_arry = []
+    idx = 0
+    for t in str(token):
+        if t == '(':
+            idx_arry.append(idx)
+        else:
+            pass
+        idx += 1
+
+    s_index = idx_arry[-1]
+    p = token[s_index+1:-1]
+    return(p)
+```
+
+
+```python
+relative_dic['word'] = relative_dic['Token'].apply(lambda x: ''.join(x.split('(')[:-1]))
+relative_dic['pos'] = relative_dic['Token'].apply(lambda x: x.split('(')[-1].replace(')', ''))
+
+relative_dic = relative_dic[['Token', 'word', 'pos', 'Token_freq', 'Total_ratio',
+                             'Gender_Freq', 'Gender_Bias', 
+                             'A10_Freq', 'A10_Bias', 'A20_Freq', 'A20_Bias', 
+                             'A30_Freq', 'A30_Bias', 'A40_Freq', 'A40_Bias',
+                             'A50_Freq', 'A50_Bias', 'A60_Freq', 'A60_Bias', 'A70_Freq', 'A70_Bias']] 
+
+relative_dic
+```
+
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Token</th>
+      <th>word</th>
+      <th>pos</th>
+      <th>Token_freq</th>
+      <th>Total_ratio</th>
+      <th>Gender_Freq</th>
+      <th>Gender_Bias</th>
+      <th>A10_Freq</th>
+      <th>A10_Bias</th>
+      <th>A20_Freq</th>
+      <th>...</th>
+      <th>A30_Freq</th>
+      <th>A30_Bias</th>
+      <th>A40_Freq</th>
+      <th>A40_Bias</th>
+      <th>A50_Freq</th>
+      <th>A50_Bias</th>
+      <th>A60_Freq</th>
+      <th>A60_Bias</th>
+      <th>A70_Freq</th>
+      <th>A70_Bias</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>?(Punctuation)</td>
+      <td>?</td>
+      <td>Punctuation</td>
+      <td>1865214</td>
+      <td>0.532475</td>
+      <td>-1.092652</td>
+      <td>-1.125282</td>
+      <td>1.582501</td>
+      <td>1.639460</td>
+      <td>4.709142</td>
+      <td>...</td>
+      <td>3.807751</td>
+      <td>3.728915</td>
+      <td>1.845276</td>
+      <td>1.620177</td>
+      <td>1.337092</td>
+      <td>1.128453</td>
+      <td>-0.383700</td>
+      <td>-0.437217</td>
+      <td>-2.976230</td>
+      <td>-2.885823</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ㅋㅋㅋㅋㅋ(KoreanParticle)</td>
+      <td>ㅋㅋㅋㅋㅋ</td>
+      <td>KoreanParticle</td>
+      <td>1526323</td>
+      <td>0.435730</td>
+      <td>-1.762353</td>
+      <td>-1.680824</td>
+      <td>1.680877</td>
+      <td>1.665422</td>
+      <td>4.995337</td>
+      <td>...</td>
+      <td>3.763199</td>
+      <td>3.676334</td>
+      <td>-0.645103</td>
+      <td>-0.455351</td>
+      <td>-1.662415</td>
+      <td>-1.496536</td>
+      <td>-3.916414</td>
+      <td>-3.791524</td>
+      <td>-11.291175</td>
+      <td>-10.853299</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>에(Josa)</td>
+      <td>에</td>
+      <td>Josa</td>
+      <td>1376727</td>
+      <td>0.393024</td>
+      <td>-1.354588</td>
+      <td>-1.337686</td>
+      <td>1.516475</td>
+      <td>1.556426</td>
+      <td>4.815396</td>
+      <td>...</td>
+      <td>3.781199</td>
+      <td>3.756026</td>
+      <td>1.484062</td>
+      <td>1.430571</td>
+      <td>0.922323</td>
+      <td>0.894123</td>
+      <td>-0.292875</td>
+      <td>-0.305520</td>
+      <td>-3.032982</td>
+      <td>-3.025299</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>가(Josa)</td>
+      <td>가</td>
+      <td>Josa</td>
+      <td>1144262</td>
+      <td>0.326660</td>
+      <td>-1.330090</td>
+      <td>-1.316493</td>
+      <td>1.611810</td>
+      <td>1.626960</td>
+      <td>4.836498</td>
+      <td>...</td>
+      <td>3.745612</td>
+      <td>3.730188</td>
+      <td>1.468008</td>
+      <td>1.432860</td>
+      <td>0.856439</td>
+      <td>0.860018</td>
+      <td>-0.144169</td>
+      <td>-0.195058</td>
+      <td>-2.928766</td>
+      <td>-2.935806</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>이(Josa)</td>
+      <td>이</td>
+      <td>Josa</td>
+      <td>919870</td>
+      <td>0.262602</td>
+      <td>-1.318207</td>
+      <td>-1.311745</td>
+      <td>1.399605</td>
+      <td>1.440919</td>
+      <td>4.757490</td>
+      <td>...</td>
+      <td>3.840997</td>
+      <td>3.813802</td>
+      <td>1.523747</td>
+      <td>1.475925</td>
+      <td>1.019233</td>
+      <td>0.979362</td>
+      <td>0.074839</td>
+      <td>-0.029539</td>
+      <td>-2.691890</td>
+      <td>-2.770597</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>18356</th>
+      <td>암데(Noun)</td>
+      <td>암데</td>
+      <td>Noun</td>
+      <td>351</td>
+      <td>0.000100</td>
+      <td>-1.481605</td>
+      <td>-1.486564</td>
+      <td>1.325666</td>
+      <td>1.337359</td>
+      <td>4.437628</td>
+      <td>...</td>
+      <td>4.217711</td>
+      <td>4.220826</td>
+      <td>1.701743</td>
+      <td>1.713539</td>
+      <td>0.075802</td>
+      <td>0.087326</td>
+      <td>0.492802</td>
+      <td>0.095993</td>
+      <td>-2.913589</td>
+      <td>-2.902128</td>
+    </tr>
+    <tr>
+      <th>18357</th>
+      <td>라드(Noun)</td>
+      <td>라드</td>
+      <td>Noun</td>
+      <td>351</td>
+      <td>0.000100</td>
+      <td>-1.094817</td>
+      <td>-1.090738</td>
+      <td>0.757370</td>
+      <td>0.795543</td>
+      <td>4.912486</td>
+      <td>...</td>
+      <td>3.725778</td>
+      <td>3.774007</td>
+      <td>1.336311</td>
+      <td>1.374823</td>
+      <td>0.774695</td>
+      <td>0.812868</td>
+      <td>0.783361</td>
+      <td>0.821534</td>
+      <td>-2.913589</td>
+      <td>-2.875849</td>
+    </tr>
+    <tr>
+      <th>18358</th>
+      <td>액상(Noun)</td>
+      <td>액상</td>
+      <td>Noun</td>
+      <td>351</td>
+      <td>0.000100</td>
+      <td>-0.445995</td>
+      <td>-0.421465</td>
+      <td>0.466524</td>
+      <td>0.173400</td>
+      <td>5.630803</td>
+      <td>...</td>
+      <td>3.085743</td>
+      <td>3.107728</td>
+      <td>0.767727</td>
+      <td>0.184045</td>
+      <td>0.075516</td>
+      <td>0.190725</td>
+      <td>-2.916976</td>
+      <td>-2.802428</td>
+      <td>-2.913874</td>
+      <td>-2.799325</td>
+    </tr>
+    <tr>
+      <th>18359</th>
+      <td>스티(Noun)</td>
+      <td>스티</td>
+      <td>Noun</td>
+      <td>351</td>
+      <td>0.000100</td>
+      <td>-1.704748</td>
+      <td>-1.638637</td>
+      <td>0.983399</td>
+      <td>1.039861</td>
+      <td>4.927054</td>
+      <td>...</td>
+      <td>3.824710</td>
+      <td>3.831202</td>
+      <td>0.477456</td>
+      <td>0.533584</td>
+      <td>0.075802</td>
+      <td>0.131765</td>
+      <td>0.084469</td>
+      <td>0.140431</td>
+      <td>-2.913589</td>
+      <td>-2.857938</td>
+    </tr>
+    <tr>
+      <th>18380</th>
+      <td>다른팀(Noun)</td>
+      <td>다른팀</td>
+      <td>Noun</td>
+      <td>351</td>
+      <td>0.000100</td>
+      <td>-1.500599</td>
+      <td>-1.477266</td>
+      <td>0.466524</td>
+      <td>0.501595</td>
+      <td>5.463502</td>
+      <td>...</td>
+      <td>3.345351</td>
+      <td>3.364846</td>
+      <td>0.068836</td>
+      <td>0.103804</td>
+      <td>-0.620491</td>
+      <td>-0.585624</td>
+      <td>-2.916976</td>
+      <td>-2.882200</td>
+      <td>-2.913874</td>
+      <td>-2.879098</td>
+    </tr>
+  </tbody>
+</table>
+<p>18381 rows × 21 columns</p>
+
+
+
+
+
+
+```python
+relative_dic.to_csv('350만_feature_dic.csv', index=False)
+```
+
+
