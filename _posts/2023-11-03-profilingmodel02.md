@@ -581,7 +581,8 @@ df.to_csv('SNS_FULL_Dataset(텍스트 전처리).csv', index=False)
 
 <br><br>
 ### 토크나이즈
-
+- konlpy 라이브러리의 Okt를 사용하여 형태소 분리
+- 동일 철자이나 다른 형태소를 갖는 토큰을 파악하기 위해 '토큰(형태소)' 형식으로 토크나이즈즈
 
 ```python
 def pos_tokenizer(sentence):    #POS 기준 토크나이제이션
@@ -718,7 +719,21 @@ tokenized_df.to_csv('350만_Tokenized(pos 비교정).csv', index = False)
 
 
 <br><br>
-### 토큰 빈도수 딕셔너리 구축
+### 토큰 빈도수 딕셔너리 구축 및 스크리닝
+**딕셔너리 구축**
+- 빈도수 0.0001 이상의 토큰만 사용
+  
+<br><br>
+**스크리닝 결과**
+- Okt 딕셔너리에 포함되지 않은 표현이 파괴됨<br>
+  ⇒ 두드러지는 표현 교정(분리된 토큰 결합) 
+- 분류가 모호하거나 부정확한 형태소 파악
+  - 의미적으로 해석이 어려운 Eomi, VerbPrefix, Suffix<br>
+    ⇒ 전/후 토큰과 병합 및 형태소 재분류 
+  - Modifier,Determiner 두 형태소의 개념적 구분이 명확하지 않음<br>
+    ⇒ 두 형태소 병합 
+  - Foreign 분류가 부정확(특수기호 및 기타 표현 포함)<br>
+    ⇒ 형태소별 재분류 
 
 
 ```python
@@ -788,8 +803,12 @@ def occur_countor(df):
 ```
 
 
+
+
 ```python
-Occur_dic = occur_countor(tokenized_df)
+Occur_dic['word'] = Occur_dic['Token'].apply(lambda x: ''.join(x.split('(')[:-2]))
+Occur_dic['pos'] = Occur_dic['Token'].apply(lambda x: x.split('(')[-1].replace(')', ''))
+Occur_dic = Occur_dic[['Token', 'word', 'pos', 'Token_freq', 'Total_ratio']]
 Occur_dic
 ```
 
@@ -800,6 +819,8 @@ Occur_dic
     <tr style="text-align: right;">
       <th></th>
       <th>Token</th>
+      <th>word</th>
+      <th>pos</th>
       <th>Token_freq</th>
       <th>Total_ratio</th>
     </tr>
@@ -808,30 +829,40 @@ Occur_dic
     <tr>
       <th>0</th>
       <td>?(Punctuation)</td>
+      <td></td>
+      <td>Punctuation</td>
       <td>1865214</td>
       <td>0.532475</td>
     </tr>
     <tr>
       <th>1</th>
       <td>ㅋㅋㅋㅋㅋ(KoreanParticle)</td>
+      <td></td>
+      <td>KoreanParticle</td>
       <td>1526323</td>
       <td>0.435730</td>
     </tr>
     <tr>
       <th>2</th>
       <td>에(Josa)</td>
+      <td></td>
+      <td>Josa</td>
       <td>1376727</td>
       <td>0.393024</td>
     </tr>
     <tr>
       <th>3</th>
       <td>가(Josa)</td>
+      <td></td>
+      <td>Josa</td>
       <td>1144262</td>
       <td>0.326660</td>
     </tr>
     <tr>
       <th>4</th>
       <td>이(Josa)</td>
+      <td></td>
+      <td>Josa</td>
       <td>919870</td>
       <td>0.262602</td>
     </tr>
@@ -840,40 +871,52 @@ Occur_dic
       <td>...</td>
       <td>...</td>
       <td>...</td>
+      <td>...</td>
+      <td>...</td>
     </tr>
     <tr>
       <th>18376</th>
       <td>방울토마토(Noun)</td>
+      <td></td>
+      <td>Noun</td>
       <td>351</td>
       <td>0.000100</td>
     </tr>
     <tr>
       <th>18377</th>
       <td>하노이(Noun)</td>
+      <td></td>
+      <td>Noun</td>
       <td>351</td>
       <td>0.000100</td>
     </tr>
     <tr>
       <th>18378</th>
       <td>젭(Noun)</td>
+      <td></td>
+      <td>Noun</td>
       <td>351</td>
       <td>0.000100</td>
     </tr>
     <tr>
       <th>18379</th>
       <td>낀데(Verb)</td>
+      <td></td>
+      <td>Verb</td>
       <td>351</td>
       <td>0.000100</td>
     </tr>
     <tr>
       <th>18380</th>
       <td>다른팀(Noun)</td>
+      <td></td>
+      <td>Noun</td>
       <td>351</td>
       <td>0.000100</td>
     </tr>
   </tbody>
 </table>
-<p>18381 rows × 3 columns</p>
+<p>18381 rows × 5 columns</p>
 
 
 
