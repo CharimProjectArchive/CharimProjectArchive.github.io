@@ -1,10 +1,10 @@
 ---
 layout: single
-title:  "Part 01. 온라인 메시지 작성자 프로파일링 모델 개발: 자연어 전처리 및 변수 개발"
+title:  "Part 01. 온라인 메시지 작성자 프로파일링 모델 개발: 자연어 전처리"
 categories: Project:Profileing_model
-tag: [Feature Engineering, NLP]
+tag: [NLP, 불용어처리, 표제화, 토크니제이션]
 ---
-<span style="color: #808080">#NLP #Feature Engineering #자연어 계량 #카카오톡 오픈채팅 대화 메시지</span>
+<span style="color: #808080">#NLP #불용어 처리 #표제화 #토크니제이션 #카카오톡 오픈채팅 대화 메시지</span>
 <hr>
 
 {: .notice--primary} 
