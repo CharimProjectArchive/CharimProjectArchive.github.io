@@ -1,6 +1,6 @@
 ---
 layout: single
-title:  "Part 00. 온라인 메시지 작성자 프로파일링 모델 개발: 데이터셋 기초 탐색"
+title:  "Part 01. 온라인 메시지 작성자 프로파일링 모델 개발: 데이터셋 기초 탐색"
 categories: Project:Profileing_model
 tag: [EDA, NLP]
 ---
