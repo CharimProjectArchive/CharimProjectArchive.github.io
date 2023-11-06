@@ -1,6 +1,6 @@
 ---
 layout: single
-title:  "[Kaggle] Plant Pathology 2020 - FGVC7 코드리뷰"
+title:  "[Kaggle] Plant Pathology 2020 - FGVC7"
 categories: Study:Competition
 tag: [CV, CNN, EfficientNet]
 ---
