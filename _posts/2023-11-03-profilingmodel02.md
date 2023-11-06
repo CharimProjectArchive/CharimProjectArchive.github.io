@@ -714,7 +714,7 @@ tokenized_df[['sex', 'age', 'contents', 'tokenized', 'token_count']]
 
 
 ```python
-tokenized_df.to_csv('350만_Tokenized(pos 비교정).csv', index = False)
+tokenized_df.to_csv('350만_Tokenized.csv', index = False)
 ```
 
 
@@ -734,6 +734,7 @@ tokenized_df.to_csv('350만_Tokenized(pos 비교정).csv', index = False)
     ⇒ 두 형태소 병합 
   - Foreign 분류가 부정확(특수기호 및 기타 표현 포함)<br>
     ⇒ 형태소별 재분류 
+
 
 
 ```python
@@ -760,6 +761,7 @@ def split_dataframe(dataframe):
         splited_li.append(dataframe)
     return splited_li
 ```
+
 
 
 ```python
@@ -927,23 +929,12 @@ Occur_dic.to_csv('350만_Occur_dic.csv', index=False)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+<br><br>
 ### 주요 오분류  형태소 재분류
 
 
 ```python
+# 오분류되는 주요 토큰 형태소 재분류
 def fix_foreign(tokenized):
     missing_Adverb = [', 후에(Foreign)', ', 후(Foreign)', ', 초에(Foreign)', ', 쯤에(Foreign)',
                       ', 쯤(Foreign)', ', 정도에(Foreign)', ', 정도(Foreign)', ', 전에는(Foreign)',
@@ -1057,105 +1048,7 @@ def fix_suffix_Noun2(tokenized):
 
 
 ```python
-single_words = ['할인가',  '할인가격', '할인금', '할인금액',
-                '펀딩가', '펀딩가격', '펀딩금', '펀딩금액',
-                '예정가', '예정가격',
-                '정상가', '정상가격', 
-                '결제일',
-                '알림신청',
-                '얼리버드',
-                '리워드', 
-                '사은품',
-                '구성품',
-                '수령일',
-                '배송일',
-                '종료일',
-                '택배사',
-                '택배발송',
-                '보증기간',
-                'C타입',
-                '새소식',
-                '고객샌터', '고객센터',
-                '후원금', '후원금액',
-                '모델명',
-                '크라우드',
-                '특허증',
-                '사용법', '사용방법',
-                '제조국',
-                '생산지',
-                '접수처',
-                '콜드브루', '콜드부르',
-                '키보드',
-                '받침대',
-                '맞춤형',
-                '가열식',
-                '일체형',
-                '끝판왕',
-                '전문가용',
-                '숙련자', '숙련자용',
-                '명암비',
-                '풀패키지',
-                '와디즈',
-                '아답터'
-                '서포터즈'
-                '안내',
-                '다들',
-                '도착',
-                '그쵸',
-                '충동구매'
-               ]
-
-destroyed_words = {'할인(Noun)' : ['가', '금'],
-                   '펀딩(Noun)' : ['가', '금'],
-                   '예정(Noun)' : ['가'],
-                   '정상(Noun)' : ['가'],
-                   '결제(Noun)' : ['일'],
-                   '알림(Noun)' : ['신'],
-                   '얼리(Verb)' : ['버'],
-                   '리(Noun)' : ['워'], 
-                   '사은(Noun)': ['품'],
-                   '구(Modifier)' : ['성'],
-                   '수령(Noun)' : ['일'],
-                   '배송(Noun)' : ['일'],
-                   '종료(Noun)' : ['일'],
-                   '택배(Noun)' : ['사', '발'],
-                   '보증(Noun)' : ['기간'],
-                   'C(Alpha)' : ['타'],
-                   '새(Modifier)' : ['소'],
-                   '고객(Noun)' : ['샌', '센'],
-                   '후(Noun)' : ['원'],
-                   '후원(Noun)' : ['금'],
-                   '모델(Noun)' : ['명'],
-                   '크라(Verb)' : ['우'],       
-                   '특허(Noun)' : ['증'],
-                   '사용(Noun)' : ['법', '방'],
-                   '사(Modifier)' : ['용'],
-                   '제(Modifier)' : ['조'],
-                   '생산(Noun)' : ['지'],
-                   '접수(Noun)' : ['처'],
-                   '콜드(Noun)' : ['브', '부'],
-                   '키(Noun)' : ['보'],
-                   '받침(Noun)' : ['대'],
-                   '맞춤(Noun)' : ['형'],
-                   '가열(Noun)' : ['식'],
-                   '일체(Noun)' : ['형'],
-                   '끝판(Noun)' : ['왕'],
-                   '전문(Noun)' : ['가'],
-                   '숙련(Noun)' : ['자'],
-                   '명암(Noun)' : ['비'],
-                   '풀(Noun)' : ['패'],
-                   '와디(Noun)' : ['즈'],
-                   '아(Exclamation)' : ['답'],
-                   '서포터(Noun)' :['즈'],
-                   '안(VerbPrefix)' : ['내'],
-                   '다(Adverb)' : ['들'],
-                   '도(Suffix)' : ['착'],
-                   '그(Noun)' : ['쵸'],
-                   '충동(Noun)' : ['구'],
-                  }
-
-
-
+# 해석이 모호하거나 파괴된 토큰 결헙 및 형태소 재분류류
 def restore_pos(tokenized_sentence):
     import re
     import numpy as np
@@ -1163,41 +1056,7 @@ def restore_pos(tokenized_sentence):
     global pos_label
     
     token_list = tokenized_sentence.split(', ')
-    
-    destroyed_keys = destroyed_words.keys()
-    for dest_front in destroyed_keys:
-        if dest_front in token_list:
-            fw_indexs = np.where(np.array(token_list) == dest_front)[0].tolist()
-            fron_word = dest_front
-            
-            for fw_index in fw_indexs:
-                bw_index = int(fw_index + 1)
-                
-                if bw_index < len(token_list):
-                    back_word = token_list[bw_index]
-                    
-                    dest_back_list = destroyed_words[dest_front]
-                    for dest_back in dest_back_list:
-                        if dest_back == back_word[0]:
-                            
-                            assemble_word = re.sub(pattern = r'\([^)]*\)', repl='', string = str(fron_word + back_word))
 
-                            for s_word in single_words:
-                                if s_word in assemble_word and s_word == assemble_word:
-                                    re_fw = assemble_word + '(Noun)'
-
-                                    token_list[fw_index] = re_fw
-                                    token_list[bw_index] = ''
-
-                                elif s_word in assemble_word and s_word != assemble_word:
-                                    sw_lenght = len(s_word)
-                                    re_fw = assemble_word[:sw_lenght] + '(Noun)'
-                                    re_bw = assemble_word[sw_lenght:] + '(Josa)'
-
-                                    token_list[fw_index] = re_fw
-                                    token_list[bw_index] = re_bw
-    
-    
     for i in range(len(token_list)-1):
         ft_index = i
         bt_index = i+1
@@ -1350,9 +1209,6 @@ tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(fix_suffix_
 
 
 
-```python
-tokenized_df.to_csv('350만_Tokenized.csv(pos 교정)', index = False)
-```
 
 
 ```python
@@ -1365,4 +1221,8 @@ tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(fix_suffix_
     100%|████████████████████████████████████████████████████████████████████████████| 3502912/3502912 [05:36<00:00, 10400.00it/s]
     100%|███████████████████████████████████████████████████████████████████████████| 3502912/3502912 [00:13<00:00, 265000.73it/s]
 
+
+```python
+tokenized_df.to_csv('350만_Tokenized.csv(pos 교정)', index = False)
+```
 
