@@ -1222,7 +1222,7 @@ tokenized_df.to_csv('350만_Tokenized.csv(pos 교정)', index = False)
 
 <br><br>
 ## 03. 상대 편향도/상대 빈출도 딕셔너리 구축
-### 형태소 재분류한 토큰 딕셔너리 생성
+### 형태소 재분류한 딕셔너리 생성
 
 
 ```python
@@ -1310,7 +1310,7 @@ Occur_dic.to_csv('350만_Occur_dic(pos 교정).csv', index=False)
 
 
 <br><br>
-### 성별/연령에 따른 토큰의 상대 빈출도 및 상대 편향도 계산
+### 토큰의 상대 빈출도 및 상대 편향도 계산
 
 
 ```python
