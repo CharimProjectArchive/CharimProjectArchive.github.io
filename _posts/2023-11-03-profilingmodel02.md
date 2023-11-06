@@ -1,7 +1,7 @@
 ---
 layout: single
 title:  "Part 02. 온라인 메시지 작성자 프로파일링 모델 개발: 전처리 및 변수개발"
-categories: Project:Profileing_model
+categories: Project:프로파일링_모델_개발
 tag: [NLP, 불용어처리, 표제화, 토크니제이션, 변수개발]
 ---
 <span style="color: #808080">#NLP #불용어 처리 #표제화 #토크니제이션 #변수개발 #자연어 계량</span>
