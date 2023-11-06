@@ -5,4 +5,4 @@ categories: Project:Profileing_model
 tag: [EDA, NLP]
 ---
 {: .notice--primary} 
-&nbsp;&nbsp;1. 데이터셋 설명 및 기초 탐색 <br>
+&nbsp;&nbsp;1. 데이터셋(카카오톡 오픈채팅 대화 메시지)에 대한 기초 탐색에서 파악한 인사이트을 바탕으로 전처리 수행<br>
