@@ -2,9 +2,9 @@
 layout: single
 title:  "Part 02. 온라인 메시지 작성자 프로파일링 모델 개발: 전처리 및 변수개발"
 categories: Project:프로파일링_모델_개발
-tag: [NLP, 불용어처리, 표제화, 토크니제이션, 변수개발]
+tag: [NLP, 불용어처리, 표제화, 토크나이즈, 변수개발]
 ---
-<span style="color: #808080">#NLP #불용어 처리 #표제화 #토크니제이션 #변수개발 #자연어 계량</span>
+<span style="color: #808080">#NLP #불용어 처리 #표제화 #토크나이즈 #변수개발 #자연어 계량</span>
 <hr>
 
 {: .notice--primary} 
@@ -577,4 +577,753 @@ print("- cutoff data: {:,}({}%)".format(cutoff, round(cutoff/deleted_white*100, 
 ```python
 df.to_csv('SNS_FULL_Dataset(텍스트 전처리).csv', index=False)
 ```
+
+
+
+### 토크나이즈
+
+
+```python
+def pos_tokenizer(sentence):    #POS 기준 토크나이제이션
+    import konlpy
+    okt = konlpy.tag.Okt() 
+    pos_list = okt.pos(str(sentence)) #토큰/형태소 튜플처리
+
+    token_arry = []
+    for t, m in pos_list:
+        token = '{}({})'.format(t, m)
+        token_arry.append(token)
+    
+    token_count = len(token_arry)
+    tokenized_sentence = ', '.join(token_arry)
+    return tokenized_sentence, token_count
+```
+
+
+```python
+# 데이터가 커서 분리하여 처리
+df1 = df[:600000]
+df2 = df[600000:1200000]
+df3 = df[1200000:1800000]
+df4 = df[1800000:2400000]
+df5 = df[2400000:3000000]
+df6 = df[3000000:]
+
+df_li = [df1, df2, df3, df4, df5, df6]
+
+for d in df_li:
+    d['tokenized'] = d['contents'].progress_apply(pos_tokenizer)
+    d['tokenized'] = d['tokenized'].progress_apply(lambda x : x[0])
+    d['token_count'] = d['tokenized'].progress_apply(lambda x: x[1])
+    
+tokenized_df = pd.concat(df_li, ignore_index=True)
+tokenized_df = tokenized_df.drop(columns={'tokenized'})
+```
+
+    100%|████████████████████████████████████████████████████████████████████████████████| 600000/600000 [36:11<00:00, 276.37it/s]
+    ...생략...
+
+
+
+
+
+<div>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>topic</th>
+      <th>sex</th>
+      <th>age</th>
+      <th>resident</th>
+      <th>contents</th>
+      <th>length</th>
+      <th>spell_num</th>
+      <th>spell_mean</th>
+      <th>spell_std</th>
+      <th>spell_kurt</th>
+      <th>spell_skewn</th>
+      <th>symbol_num</th>
+      <th>symbol_mean</th>
+      <th>symbol_std</th>
+      <th>symbol_kurt</th>
+      <th>symbol_skewn</th>
+      <th>contents_length</th>
+      <th>word_bunch</th>
+      <th>tokenized</th>
+      <th>token_count</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>개인및관계</td>
+      <td>여성</td>
+      <td>20대</td>
+      <td>경기도</td>
+      <td>나지금밥머거2시간걸어서 번화가찾았어..ㅜㅜ 잉ㅜㅜ ㅎㅎㅎㅎ오좋겠네 ㅋㄱㅋㄱㄱㄱㄱ아니...</td>
+      <td>127</td>
+      <td>6</td>
+      <td>2.185021</td>
+      <td>1.299761</td>
+      <td>-1.808233</td>
+      <td>-0.009222</td>
+      <td>4</td>
+      <td>0.173287</td>
+      <td>0.300142</td>
+      <td>-1.808233</td>
+      <td>-0.009222</td>
+      <td>127</td>
+      <td>16</td>
+      <td>나(Noun), 지금(Noun), 밥(Noun), 머거(Verb), 2시간(Numb...</td>
+      <td>54</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>개인및관계</td>
+      <td>남성</td>
+      <td>20대</td>
+      <td>경기도</td>
+      <td>헐 ㅠㅠ 언넝호텔들가ㅠㅠ 엄청피건할첸데 나는인낫러요 나 두시출근이다ㅎㅎㅎㅎ 퀵으로한...</td>
+      <td>130</td>
+      <td>6</td>
+      <td>0.961387</td>
+      <td>0.555163</td>
+      <td>-1.059126</td>
+      <td>-0.488576</td>
+      <td>6</td>
+      <td>2.041180</td>
+      <td>1.296771</td>
+      <td>-1.059126</td>
+      <td>-0.488576</td>
+      <td>130</td>
+      <td>18</td>
+      <td>헐(Verb), ㅠㅠ(KoreanParticle), 언(Modifier), 넝(No...</td>
+      <td>49</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>개인및관계</td>
+      <td>여성</td>
+      <td>20대</td>
+      <td>경기도</td>
+      <td>학생이면좋구! 왜혼자다니냐고오..... 와 내친군학교나감 ㅋㅋㅋㅋㅋ 그르네 막졸업한...</td>
+      <td>56</td>
+      <td>1</td>
+      <td>2.197225</td>
+      <td>0.000000</td>
+      <td>-3.000000</td>
+      <td>0.000000</td>
+      <td>3</td>
+      <td>1.404043</td>
+      <td>1.072424</td>
+      <td>-3.000000</td>
+      <td>0.000000</td>
+      <td>56</td>
+      <td>7</td>
+      <td>학생(Noun), 이(Suffix), 면(Josa), 좋구(Adjective), !...</td>
+      <td>25</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>개인및관계</td>
+      <td>남성</td>
+      <td>20대</td>
+      <td>경기도</td>
+      <td>훔 학생 없는데...주변에... 아니 복학하고 학교를 못가는데 어케 친구가있냐.. ...</td>
+      <td>74</td>
+      <td>1</td>
+      <td>2.079442</td>
+      <td>0.000000</td>
+      <td>-3.000000</td>
+      <td>0.000000</td>
+      <td>4</td>
+      <td>0.997246</td>
+      <td>0.175572</td>
+      <td>-3.000000</td>
+      <td>0.000000</td>
+      <td>74</td>
+      <td>15</td>
+      <td>훔(Noun), 학생(Noun), 없는데(Adjective), ...(Punctua...</td>
+      <td>31</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>개인및관계</td>
+      <td>여성</td>
+      <td>30대</td>
+      <td>충청북도</td>
+      <td>참나 내가뭐얼마나그랬다고 웃기는사람이야지짜 너무화난당.. 근데오빠는말을또 잘해서 내...</td>
+      <td>146</td>
+      <td>2</td>
+      <td>0.693147</td>
+      <td>0.000000</td>
+      <td>-3.000000</td>
+      <td>0.000000</td>
+      <td>1</td>
+      <td>0.693147</td>
+      <td>0.000000</td>
+      <td>-3.000000</td>
+      <td>0.000000</td>
+      <td>146</td>
+      <td>19</td>
+      <td>참나(Noun), 내(Noun), 가(Josa), 뭐(Noun), 얼마나(Noun)...</td>
+      <td>63</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+  </tbody>
+</table>
+<p>3502912 rows × 20 columns</p>
+</div>
+
+
+
+
+```python
+tokenized_df.to_csv('350만_Tokenized(pos 비교정).csv', index = False)
+```
+
+### 토큰 빈도수 딕셔너리 구축
+
+
+```python
+#메모리아웃 되는 것을 방지하기 위해 데이터를 일정 크기 이하로 Split
+def split_dataframe(dataframe):
+    total_length = len(dataframe)
+    splited_li = []  # splited_li는 반드시 초기화되어야 합니다.
+
+    if len(dataframe) > 100000:
+        split_size = 100000
+        num_split = total_length // split_size + 1
+
+        for i in range(num_split):
+            start_idx = i * split_size
+            end_idx = (i + 1) * split_size
+            try:
+                splited = dataframe[start_idx:end_idx]
+            except:
+                splited = dataframe[start_idx:]
+
+            # 작은 그룹을 리스트에 추가
+            splited_li.append(splited)
+    else:
+        splited_li.append(dataframe)
+    return splited_li
+```
+
+
+```python
+def occur_countor(df):
+    total_length = len(df)
+    splited_li = split_dataframe(df)
+
+    Occur_dict = {}
+    for splited_df in splited_li: 
+        merge_list = []
+        for index, row in tqdm(splited_df.iterrows(), total=len(splited_df), desc="전체 토큰 병합", mininterval=0.1):
+            token_list = row['tokenized'].split(', ')
+            for token in token_list:
+                merge_list.append(token)
+
+        count_list = Counter(merge_list).most_common()
+
+        sort_arry = []
+        for d, c in tqdm(count_list, total=len(count_list), desc="빈도순 정렬", mininterval=0.1):
+            for i in range(c):
+                sort_arry.append(d)
+
+        unique_dic = Counter(sort_arry)
+        unique_token = list(unique_dic.keys())
+        unique_freq = list(unique_dic.values())
+        
+        for key, value in zip(unique_token, unique_freq):  # zip을 사용하여 두 리스트를 동시에 순회
+            if key in Occur_dict:
+                Occur_dict[key] += value
+            else:
+                Occur_dict[key] = value
+
+    token_li = Occur_dict.keys()
+    freq_li = Occur_dict.values()
+
+    Occur_dic = pd.DataFrame({'Token': token_li, 'Token_freq': freq_li})
+    Occur_dic = Occur_dic.sort_values(by=['Token_freq'], ascending=False).reset_index(drop=True) 
+    Occur_dic['Total_ratio'] = Occur_dic['Token_freq'].apply(lambda x: x/total_length)
+    Occur_dic = Occur_dic.loc[Occur_dic['Total_ratio'] >= 0.0001]
+    return Occur_dic
+```
+
+
+```python
+Occur_dic = occur_countor(tokenized_df)
+Occur_dic
+```
+
+
+```python
+Occur_dic.to_csv('350만_Occur_dic.csv', index=False)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### 주요 오분류  형태소 재분류
+
+
+```python
+def fix_foreign(tokenized):
+    missing_Adverb = [', 후에(Foreign)', ', 후(Foreign)', ', 초에(Foreign)', ', 쯤에(Foreign)',
+                      ', 쯤(Foreign)', ', 정도에(Foreign)', ', 정도(Foreign)', ', 전에는(Foreign)',
+                      ', 전에(Foreign)', ', 전(Foreign)', ', 이상(Foreign)', ', 안에(Foreign)',
+                      ', 부터는(Foreign)', ', 부터(Foreign)', ', 반쯤(Foreign)', ', 반에(Foreign)',
+                      ', 반부터(Foreign)', ', 반까지(Foreign)', ', 반(Foreign)', ', 밖에(Foreign)',
+                      ', 말에(Foreign)', ', 말(Foreign)', ', 만에(Foreign)', ', 만(Foreign)',
+                      ', 마다(Foreign)', ', 뒤에(Foreign)', ', 뒤(Foreign)', ', 동안(Foreign)',
+                    
+                      ', 넘어서(Foreign)', ', 넘게(Foreign)', ', 남음(Foreign)', ', 꺼(Foreign)',
+                      ', 까진데(Foreign)', ', 까진(Foreign)', ', 까지야(Foreign)', ', 까지만(Foreign)',
+                      ', 까지는(Foreign)', ', 까지(Foreign)', ', 간(Foreign)', ', 이후(Foreign)',
+                      ', 이후에(Foreign)', ', 내로(Foreign)', ', 경(Foreign)', ', 말까지(Foreign)',
+                      ', 전까지(Foreign)', ', 중에(Foreign)', ', 즘(Foreign)', ', 내내(Foreign)',
+                      ', 정도는(Foreign)', ', 초(Foreign)', ', 얼마(Foreign)', ', 정도면(Foreign)',
+                      ', 이내(Foreign)', ', 내(Foreign)', ', 간의(Foreign)', ', 간은(Foreign)',
+                      ', 약(Foreign)', ', 보다(Foreign)', ', 전엔(Foreign)', ', 까지니까(Foreign)',
+                      ', 정도만(Foreign)', ', 사이에(Foreign)', ', 뒤면(Foreign)', ', 식(Foreign)'
+                     ]
+
+    
+    missing_Josa = [', 이면(Foreign)', ', 이랑(Foreign)', ', 이라서(Foreign)', ', 이라도(Foreign)',
+                    ', 이라고(Foreign)', ', 이라(Foreign)', ', 이나(Foreign)', ', 이고(Foreign)',
+                    ', 이(Foreign)', ', 의(Foreign)', ', 을(Foreign)', ', 은(Foreign)',
+                    ', 으로(Foreign)', ', 엔(Foreign)', ', 에서(Foreign)', ', 에도(Foreign)',
+                    ', 에는(Foreign)', ', 에(Foreign)', ', 면(Foreign)', ', 로(Foreign)',
+                    ', 는(Foreign)', ', 나(Foreign)', ', 가(Foreign)', ', 라고(Foreign)'
+                    ', 이라는(Foreign)', ', 께(Foreign)', ', 를(Foreign)', ', 께(Foreign)',
+                    ', 고(Foreign)'
+                   ]
+    
+    
+    missing_Verb = [', 하면(Foreign)', ', 하고(Foreign)', ', 주고(Foreign)', ', 되면(Foreign)',
+                    ', 된(Foreign)', ', 해서(Foreign)', ', 이며(Foreign)'
+                   ]
+    
+    
+    
+    missing_Suffix = [', 어치(Foreign)', ', 치(Foreign)', ', 차(Foreign)', ', 째(Foreign)',
+                    ', 짜리(Foreign)', ', 씩(Foreign)', ', 생(Foreign)', ', 명(Foreign)',
+                    ', 대(Foreign)', ', 달에(Foreign)', ', 달(Foreign)', ', 도에(Foreign)',
+                    ', 도(Foreign)', ', 날(Foreign)', ', 급(Foreign)', ', 언(Foreign)',
+                    ', 개(Foreign)', '용(Foreign)', '형(Foreign)', '대의(Foreign)',
+                    ', 가량(Foreign)', ', 기(Foreign)', ', 부(Foreign)', ', 급의(Foreign)',
+                    ', 제(Foreign)', ', 당(Foreign)', ', 개의(Foreign)', ', 권(Foreign)',
+                    ', 불(Foreign)', ', 때(Foreign)', ', 짜리가(Foreign)'
+                     ]
+    
+    
+    missing_Noun = [', 도착(Foreign)', ', 퇴근(Foreign)', ', 컷(Foreign)', ', 각(Foreign)',
+                    ', 걸림(Foreign)', ', 출발(Foreign)', ', 리즈(Foreign)', ', 도서(Foreign)',
+                    ', 펀딩(Foreign)', ', 결제(Foreign)', ', 발송(Foreign)', ', 배송(Foreign)',
+                    ', 기준(Foreign)', ', 규정(Foreign)', ', 와디즈(Foreign)', ', 무상(Foreign)',
+                    ', 리워드(Foreign)', ', 출근(Foreign)', ', 거리(Foreign)'
+                   ]
+    
+    
+    missing_Eomi = [', 입니다(Foreign)', ', 임(Foreign)', ', 인디(Foreign)', ', 인데(Foreign)',
+                    ', 인가(Foreign)', ', 이지(Foreign)', ', 이요(Foreign)', ', 이여(Foreign)',
+                    ', 이야(Foreign)', ', 이래(Foreign)', ', 이라니(Foreign)', ', 이다(Foreign)',
+                    ', 이니까(Foreign)', ', 이네(Foreign)', ', 요(Foreign)', ', 야(Foreign)',
+                    ', 라(Foreign)', ', 다(Foreign)', ', 네(Foreign)', ', 이얌(Foreign)',
+                    ', 이니(Foreign)', ', 이라는데(Foreign)', ', 대에(Foreign)', ', 니까(Foreign)',
+                    ', 이넹(Foreign)', ', 이던데(Foreign)', ', 지(Foreign)', ', 에나(Foreign)',
+                    ', 함(Foreign)', ', 이었는데(Foreign)', ', 이거든(Foreign)', ', 이었나(Foreign)',
+                    ', 이에요(Foreign)'
+                   ]
+    
+    missing_list = [missing_Adverb, missing_Josa, missing_Verb, missing_Suffix, missing_Noun, missing_Eomi]
+    fit_list = ['(Adverb)', '(Josa)', '(Verb)', '(Suffix)', '(Noun)', '(Eomi)']
+    for i in range(len(missing_list)):
+        missing = missing_list[i]
+        fit = fit_list[i]
+        for n in range(len(missing)):
+            if missing[n] in tokenized:
+                fixed_pos = missing[n].replace('(Foreign)', fit)
+                tokenized = tokenized.replace(missing[n], fixed_pos)
+            else:
+                pass
+    return(tokenized)
+
+
+def fix_suffix_Noun(tokenized):
+    missing = [', 오빠(Suffix)', ', 언니(Suffix)', ', 누나(Suffix)', ', 형(Suffix)',
+               ', 엄마(Suffix)', ', 아빠(Suffix)', 
+               ', User(Alpha)', ', UserUser(Alpha)', ', UserUserUser(Alpha)']
+    
+    for i in range(len(missing)):
+        if missing[i] in tokenized:
+            fixed_pos = missing[i].replace('(Suffix)', '(Noun)')
+            tokenized = tokenized.replace(missing[i], fixed_pos)
+        elif missing[i] in tokenized:
+            fixed_pos = missing[i].replace('(Alpha)', '(Noun)')
+            tokenized = tokenized.replace(missing[i], fixed_pos)
+            
+        else:
+            pass
+    return(tokenized)
+
+
+def fix_suffix_Noun2(tokenized):
+    missing = [', 님(Suffix)', ', 분들(Suffix)']   
+    for i in range(len(missing)):
+        if missing[i] in tokenized:
+            fixed_pos = missing[i].replace('(Suffix)', '(Noun)')
+            tokenized = tokenized.replace(missing[i], fixed_pos)
+        else:
+            pass
+    return(tokenized)
+```
+
+
+```python
+single_words = ['할인가',  '할인가격', '할인금', '할인금액',
+                '펀딩가', '펀딩가격', '펀딩금', '펀딩금액',
+                '예정가', '예정가격',
+                '정상가', '정상가격', 
+                '결제일',
+                '알림신청',
+                '얼리버드',
+                '리워드', 
+                '사은품',
+                '구성품',
+                '수령일',
+                '배송일',
+                '종료일',
+                '택배사',
+                '택배발송',
+                '보증기간',
+                'C타입',
+                '새소식',
+                '고객샌터', '고객센터',
+                '후원금', '후원금액',
+                '모델명',
+                '크라우드',
+                '특허증',
+                '사용법', '사용방법',
+                '제조국',
+                '생산지',
+                '접수처',
+                '콜드브루', '콜드부르',
+                '키보드',
+                '받침대',
+                '맞춤형',
+                '가열식',
+                '일체형',
+                '끝판왕',
+                '전문가용',
+                '숙련자', '숙련자용',
+                '명암비',
+                '풀패키지',
+                '와디즈',
+                '아답터'
+                '서포터즈'
+                '안내',
+                '다들',
+                '도착',
+                '그쵸',
+                '충동구매'
+               ]
+
+destroyed_words = {'할인(Noun)' : ['가', '금'],
+                   '펀딩(Noun)' : ['가', '금'],
+                   '예정(Noun)' : ['가'],
+                   '정상(Noun)' : ['가'],
+                   '결제(Noun)' : ['일'],
+                   '알림(Noun)' : ['신'],
+                   '얼리(Verb)' : ['버'],
+                   '리(Noun)' : ['워'], 
+                   '사은(Noun)': ['품'],
+                   '구(Modifier)' : ['성'],
+                   '수령(Noun)' : ['일'],
+                   '배송(Noun)' : ['일'],
+                   '종료(Noun)' : ['일'],
+                   '택배(Noun)' : ['사', '발'],
+                   '보증(Noun)' : ['기간'],
+                   'C(Alpha)' : ['타'],
+                   '새(Modifier)' : ['소'],
+                   '고객(Noun)' : ['샌', '센'],
+                   '후(Noun)' : ['원'],
+                   '후원(Noun)' : ['금'],
+                   '모델(Noun)' : ['명'],
+                   '크라(Verb)' : ['우'],       
+                   '특허(Noun)' : ['증'],
+                   '사용(Noun)' : ['법', '방'],
+                   '사(Modifier)' : ['용'],
+                   '제(Modifier)' : ['조'],
+                   '생산(Noun)' : ['지'],
+                   '접수(Noun)' : ['처'],
+                   '콜드(Noun)' : ['브', '부'],
+                   '키(Noun)' : ['보'],
+                   '받침(Noun)' : ['대'],
+                   '맞춤(Noun)' : ['형'],
+                   '가열(Noun)' : ['식'],
+                   '일체(Noun)' : ['형'],
+                   '끝판(Noun)' : ['왕'],
+                   '전문(Noun)' : ['가'],
+                   '숙련(Noun)' : ['자'],
+                   '명암(Noun)' : ['비'],
+                   '풀(Noun)' : ['패'],
+                   '와디(Noun)' : ['즈'],
+                   '아(Exclamation)' : ['답'],
+                   '서포터(Noun)' :['즈'],
+                   '안(VerbPrefix)' : ['내'],
+                   '다(Adverb)' : ['들'],
+                   '도(Suffix)' : ['착'],
+                   '그(Noun)' : ['쵸'],
+                   '충동(Noun)' : ['구'],
+                  }
+
+
+
+def restore_pos(tokenized_sentence):
+    import re
+    import numpy as np
+    global re_sentence
+    global pos_label
+    
+    token_list = tokenized_sentence.split(', ')
+    
+    destroyed_keys = destroyed_words.keys()
+    for dest_front in destroyed_keys:
+        if dest_front in token_list:
+            fw_indexs = np.where(np.array(token_list) == dest_front)[0].tolist()
+            fron_word = dest_front
+            
+            for fw_index in fw_indexs:
+                bw_index = int(fw_index + 1)
+                
+                if bw_index < len(token_list):
+                    back_word = token_list[bw_index]
+                    
+                    dest_back_list = destroyed_words[dest_front]
+                    for dest_back in dest_back_list:
+                        if dest_back == back_word[0]:
+                            
+                            assemble_word = re.sub(pattern = r'\([^)]*\)', repl='', string = str(fron_word + back_word))
+
+                            for s_word in single_words:
+                                if s_word in assemble_word and s_word == assemble_word:
+                                    re_fw = assemble_word + '(Noun)'
+
+                                    token_list[fw_index] = re_fw
+                                    token_list[bw_index] = ''
+
+                                elif s_word in assemble_word and s_word != assemble_word:
+                                    sw_lenght = len(s_word)
+                                    re_fw = assemble_word[:sw_lenght] + '(Noun)'
+                                    re_bw = assemble_word[sw_lenght:] + '(Josa)'
+
+                                    token_list[fw_index] = re_fw
+                                    token_list[bw_index] = re_bw
+    
+    
+    for i in range(len(token_list)-1):
+        ft_index = i
+        bt_index = i+1
+        
+        f_token = token_list[ft_index]
+        b_token = token_list[bt_index]
+        
+        if '(Verb)' in f_token and '(Eomi)' in b_token:
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+            
+            f_token = assemble_token + '(Verb)' 
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+        
+        if '(Adjective)' in f_token and '(Eomi)' in b_token:
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+            
+            f_token = assemble_token + '(Adjective)'
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+        
+        
+        if '(VerbPrefix)' in f_token and '(VerbPrefix)' in b_token:
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+            
+            f_token = assemble_token + '(Noun)'
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+    
+    
+        if '(VerbPrefix)' in f_token and '(Verb)' in b_token:
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+            
+            f_token = assemble_token + '(Verb)'
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+        
+        if '(VerbPrefix)' in f_token and '(Adjective)' in b_token:
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+            
+            f_token = assemble_token + '(Adjective)'
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+        
+        
+        if '(Verb)' in f_token and '(VerbPrefix)' in b_token :
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+            
+            f_token = assemble_token + '(Noun)'
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+            
+        
+        if '하(Suffix)' in f_token and '(Josa)' in b_token:
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+            f_token = assemble_token + '(Verb)'
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token 
+        
+        
+        if '(Noun)' in f_token and '(Suffix)' in b_token:
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+            f_token = assemble_token + '(Noun)'
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+            
+        if '(Adjective)' in f_token and '(Suffix)' in b_token:
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+            f_token = assemble_token + '(Adjective)' 
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+            
+        if '(Alpha)' in f_token and '(Suffix)' in b_token:
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+            f_token = assemble_token + '(Noun)' 
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+             
+        
+        if '(PreEomi)' in f_token and '(Eomi)' in b_token:
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+            
+            f_token = assemble_token + '(Eomi)' 
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+    
+        
+        if '(Modifier)' in f_token and '(Modifier)' in b_token :           
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+            
+            f_token = assemble_token + '(Noun)'
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+            
+        if '(Modifier)' in f_token and '(Noun)' in b_token :          
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+            
+            f_token = assemble_token + '(Noun)'
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+      
+
+        
+    ws_indexs = np.where(np.array(token_list) == '')[0].tolist()
+    w = 0
+    for ws in ws_indexs:
+        ws -= w
+        del token_list[ws]
+        w += 1
+    
+    re_sentence = ', '.join(token_list)
+
+    return(re_sentence)
+```
+
+
+```python
+tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(fix_foreign)
+tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(fix_suffix_Noun)
+```
+
+    100%|████████████████████████████████████████████████████████████████████████████| 3502912/3502912 [03:24<00:00, 17136.46it/s]
+    100%|███████████████████████████████████████████████████████████████████████████| 3502912/3502912 [00:24<00:00, 141968.25it/s]
+
+
+
+```python
+tokenized_df.to_csv('350만_Tokenized.csv(pos 교정)', index = False)
+```
+
+
+```python
+tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(restore_pos)
+tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(restore_pos)
+tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(fix_suffix_Noun2)
+```
+
+    100%|█████████████████████████████████████████████████████████████████████████████| 3502912/3502912 [07:24<00:00, 7883.51it/s]
+    100%|████████████████████████████████████████████████████████████████████████████| 3502912/3502912 [05:36<00:00, 10400.00it/s]
+    100%|███████████████████████████████████████████████████████████████████████████| 3502912/3502912 [00:13<00:00, 265000.73it/s]
+
 
