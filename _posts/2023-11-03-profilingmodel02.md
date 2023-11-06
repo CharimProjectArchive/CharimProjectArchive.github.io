@@ -716,6 +716,8 @@ tokenized_df[['sex', 'age', 'contents', 'tokenized', 'token_count']]
 tokenized_df.to_csv('350만_Tokenized(pos 비교정).csv', index = False)
 ```
 
+
+<br><br>
 ### 토큰 빈도수 딕셔너리 구축
 
 
@@ -790,6 +792,90 @@ def occur_countor(df):
 Occur_dic = occur_countor(tokenized_df)
 Occur_dic
 ```
+
+
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Token</th>
+      <th>Token_freq</th>
+      <th>Total_ratio</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>?(Punctuation)</td>
+      <td>1865214</td>
+      <td>0.532475</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ㅋㅋㅋㅋㅋ(KoreanParticle)</td>
+      <td>1526323</td>
+      <td>0.435730</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>에(Josa)</td>
+      <td>1376727</td>
+      <td>0.393024</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>가(Josa)</td>
+      <td>1144262</td>
+      <td>0.326660</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>이(Josa)</td>
+      <td>919870</td>
+      <td>0.262602</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>18376</th>
+      <td>방울토마토(Noun)</td>
+      <td>351</td>
+      <td>0.000100</td>
+    </tr>
+    <tr>
+      <th>18377</th>
+      <td>하노이(Noun)</td>
+      <td>351</td>
+      <td>0.000100</td>
+    </tr>
+    <tr>
+      <th>18378</th>
+      <td>젭(Noun)</td>
+      <td>351</td>
+      <td>0.000100</td>
+    </tr>
+    <tr>
+      <th>18379</th>
+      <td>낀데(Verb)</td>
+      <td>351</td>
+      <td>0.000100</td>
+    </tr>
+    <tr>
+      <th>18380</th>
+      <td>다른팀(Noun)</td>
+      <td>351</td>
+      <td>0.000100</td>
+    </tr>
+  </tbody>
+</table>
+<p>18381 rows × 3 columns</p>
+
+
 
 
 ```python
