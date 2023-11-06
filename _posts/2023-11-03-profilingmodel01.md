@@ -389,13 +389,8 @@ full_df
 
 ```python
 # 문장 길이 확인 및 이상치 제거
-import numpy as np
-import seaborn as sns
-import matplotlib
-import matplotlib.pyplot as plt
 matplotlib.rcParams['font.family'] ='Malgun Gothic'
 matplotlib.rcParams['axes.unicode_minus'] =False
-
 
 plt.figure(figsize=(5,3))
 plt.rc('font', size=20)
@@ -424,129 +419,7 @@ plt.show()
 ```python
 length_df = full_df.loc[full_df['length'] >=20] 
 length_df = length_df.loc[length_df['length'] <=200] 
-length_df
 ```
-
-
-
-
-<div>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>topic</th>
-      <th>sex</th>
-      <th>age</th>
-      <th>resident</th>
-      <th>contents</th>
-      <th>length</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>개인및관계</td>
-      <td>여성</td>
-      <td>20대</td>
-      <td>경기도</td>
-      <td>나지금밥머거2시간걸어서 번화가찾았어..ㅜㅜ 잉ㅜㅜ ㅎㅎㅎㅎ오좋겠네 ㅋㄱㅋㄱㄱㄱㄱ아니...</td>
-      <td>127</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>개인및관계</td>
-      <td>남성</td>
-      <td>20대</td>
-      <td>경기도</td>
-      <td>헐 ㅠㅠ 언넝호텔들가ㅠㅠ 엄청피건할첸데 나는인낫러요 나 두시출근이다ㅎㅎㅎㅎ 퀵으로한...</td>
-      <td>130</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>개인및관계</td>
-      <td>여성</td>
-      <td>20대</td>
-      <td>경기도</td>
-      <td>학생이면좋구! 왜혼자다니냐고오..... 와 내친군학교나감 ㅋㅋㅋㅋㅋㅋㅋㅋㅋ 그르네 ...</td>
-      <td>56</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>개인및관계</td>
-      <td>남성</td>
-      <td>20대</td>
-      <td>경기도</td>
-      <td>훔 학생 없는데...주변에... 아니 복학하고 학교를 못가는데 어케 친구가있냐.. ...</td>
-      <td>74</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>개인및관계</td>
-      <td>여성</td>
-      <td>30대</td>
-      <td>충청북도</td>
-      <td>참나 내가뭐얼마나그랬다고 웃기는사람이야지짜 너무화난당.. 근데오빠는말을또 잘해서 내...</td>
-      <td>146</td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-    </tr>
-    <tr>
-      <th>3844725</th>
-      <td>행사</td>
-      <td>여성</td>
-      <td>20대</td>
-      <td>서울특별시</td>
-      <td>맞앜ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ 하루로 되냐곸ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ...</td>
-      <td>57</td>
-    </tr>
-    <tr>
-      <th>3844726</th>
-      <td>행사</td>
-      <td>여성</td>
-      <td>30대</td>
-      <td>경기도</td>
-      <td>다음날은 일어나서 근처 또 유명빵집 가서 점심을 먹고 집으로 복귀! 어제 점심먹을곳...</td>
-      <td>61</td>
-    </tr>
-    <tr>
-      <th>3844727</th>
-      <td>행사</td>
-      <td>남성</td>
-      <td>20대</td>
-      <td>인천광역시</td>
-      <td>집을 가는군여! 아주우!!!!! 좋습네다 User!!!! 아주좋아요! 다음주야 어차피!</td>
-      <td>48</td>
-    </tr>
-    <tr>
-      <th>3844728</th>
-      <td>행사</td>
-      <td>여성</td>
-      <td>20대</td>
-      <td>서울특별시</td>
-      <td>근데 동창회 인문계까지 싹 다 하려면 절대 못해.. 진짜 망상만 가능 그거 수용해줄...</td>
-      <td>121</td>
-    </tr>
-    <tr>
-      <th>3844729</th>
-      <td>행사</td>
-      <td>여성</td>
-      <td>20대</td>
-      <td>서울특별시</td>
-      <td>ㅋㅋㅋㅋㅋㅋㅋㅠㅠ엉엉 된다고 해주세요 그니까 망상 동창회 그정도면 연회장 빌려야함 ...</td>
-      <td>130</td>
-    </tr>
-  </tbody>
-</table>
-<p>3564117 rows × 6 columns</p>
-</div>
 
 
 
@@ -689,6 +562,7 @@ dup_df.to_excel('중복 메세지 유형 확인.xlsx', index=False)
 
 
 ```python
+# feature 별 분포 확인
 m_df = df.loc[df['sex'] == '남성']
 f_df = df.loc[df['sex'] == '여성']
 
@@ -699,11 +573,7 @@ a40_df = df.loc[df['age'] == '40대']
 a50_df = df.loc[df['age'] == '50대']
 a60_df = df.loc[df['age'] == '60대']
 a70_df = df.loc[df['age'] == '70대 이상']
-```
 
-
-```python
-# feature 별 분포 확인
 values = [total, male, female, a10, a20, a30, a40, a50, a60, a70]
 labels = ['total', 'male', 'female', 'age10', 'age20', 'age30', 'age40', 'age50', 'age60', 'age70']
 
@@ -729,7 +599,7 @@ plt.show()
 
 ```python
 # topic value 분포 확인
-import numpy as np, scipy.stats as st
+import scipy.stats as st
 
 topic_list = ['개인및관계', '미용과건강', '상거래(쇼핑)', '시사교육', '식음료', '여가생활', '일과직업', '주거와생활', '행사']
 
