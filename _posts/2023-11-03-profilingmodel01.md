@@ -907,6 +907,12 @@ plt.show()
 
 
 
+```python
+raw_df.to_csv('SNS_FULL_Dataset(raw_중복된 메세지 제거).csv', index=False)
+```
+
+
+
 ## 데이터 육안 스크리닝 
 - 동일한 어간/의미를 갖지만 어미, 줄임말, 오타 등으로 변형된 표현이 매우 많은 것으로 보여짐
 - 자음 또는 모음으로 구성된 불완전 표현(Korean Particle), 문장기호, 특수기호, 이모지 표현이 대부분 사용됨
@@ -914,10 +920,3 @@ plt.show()
     - 문장기호 및 특수기호: . , ; $ ^^ ^-^ 등
     - 이모지: 🤣, 👍, 🙏 등
 - topic value에 대한 분류기준이 적절하지 않은 것으로 보여 topic은 feature로 사용하지 않는 것으로 함
-
-
-
-
-```python
-raw_df.to_csv('SNS_FULL_Dataset(raw_중복된 메세지 제거).csv', index=False)
-```
