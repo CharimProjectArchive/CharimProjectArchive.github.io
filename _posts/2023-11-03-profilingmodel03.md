@@ -1,7 +1,7 @@
 ---
 layout: single
-title:  "Part 02. 온라인 메시지 작성자 프로파일링 모델 개발: 변수 개발 및 EDA"
-categories: Project:Profileing_model
+title:  "Part 02. 온라인 메시지 작성자 프로파일링 모델 개발: 모델링"
+categories: Project:프로파일링_모델_개발
 tag: [Feature Engineering, NLP]
 ---
 <span style="color: #808080">#NLP #Feature Engineering #자연어 계량 #카카오톡 오픈채팅 대화 메시지</span>
