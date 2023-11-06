@@ -4,7 +4,7 @@ title:  "Part 00. 온라인 메시지 작성자 프로파일링 모델 개발: �
 categories: Project:Profileing_model
 tag: [EDA, NLP]
 ---
-#NLP #EDA #카카오톡 오픈채팅 대화 메시지 #온라인 텍스트에 대한 특성 분석
+<span style="color: #808080">#NLP #EDA #카카오톡 오픈채팅 대화 메시지 #온라인 텍스트에 대한 특성 분석</span>
 <hr>
 
 
