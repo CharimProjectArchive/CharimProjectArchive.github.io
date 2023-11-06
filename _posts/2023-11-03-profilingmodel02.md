@@ -806,7 +806,7 @@ def occur_countor(df):
 
 
 ```python
-Occur_dic['word'] = Occur_dic['Token'].apply(lambda x: ''.join(x.split('(')[:-2]))
+Occur_dic['word'] = Occur_dic['Token'].apply(lambda x: ''.join(x.split('(')[:-1]))
 Occur_dic['pos'] = Occur_dic['Token'].apply(lambda x: x.split('(')[-1].replace(')', ''))
 Occur_dic = Occur_dic[['Token', 'word', 'pos', 'Token_freq', 'Total_ratio']]
 Occur_dic
@@ -829,7 +829,7 @@ Occur_dic
     <tr>
       <th>0</th>
       <td>?(Punctuation)</td>
-      <td></td>
+      <td>?</td>
       <td>Punctuation</td>
       <td>1865214</td>
       <td>0.532475</td>
@@ -837,7 +837,7 @@ Occur_dic
     <tr>
       <th>1</th>
       <td>ㅋㅋㅋㅋㅋ(KoreanParticle)</td>
-      <td></td>
+      <td>ㅋㅋㅋㅋㅋ</td>
       <td>KoreanParticle</td>
       <td>1526323</td>
       <td>0.435730</td>
@@ -845,7 +845,7 @@ Occur_dic
     <tr>
       <th>2</th>
       <td>에(Josa)</td>
-      <td></td>
+      <td>에</td>
       <td>Josa</td>
       <td>1376727</td>
       <td>0.393024</td>
@@ -853,7 +853,7 @@ Occur_dic
     <tr>
       <th>3</th>
       <td>가(Josa)</td>
-      <td></td>
+      <td>가</td>
       <td>Josa</td>
       <td>1144262</td>
       <td>0.326660</td>
@@ -861,7 +861,7 @@ Occur_dic
     <tr>
       <th>4</th>
       <td>이(Josa)</td>
-      <td></td>
+      <td>이</td>
       <td>Josa</td>
       <td>919870</td>
       <td>0.262602</td>
@@ -877,7 +877,7 @@ Occur_dic
     <tr>
       <th>18376</th>
       <td>방울토마토(Noun)</td>
-      <td></td>
+      <td>방울토마토</td>
       <td>Noun</td>
       <td>351</td>
       <td>0.000100</td>
@@ -885,7 +885,7 @@ Occur_dic
     <tr>
       <th>18377</th>
       <td>하노이(Noun)</td>
-      <td></td>
+      <td>하노이</td>
       <td>Noun</td>
       <td>351</td>
       <td>0.000100</td>
@@ -893,7 +893,7 @@ Occur_dic
     <tr>
       <th>18378</th>
       <td>젭(Noun)</td>
-      <td></td>
+      <td>젭</td>
       <td>Noun</td>
       <td>351</td>
       <td>0.000100</td>
@@ -901,7 +901,7 @@ Occur_dic
     <tr>
       <th>18379</th>
       <td>낀데(Verb)</td>
-      <td></td>
+      <td>낀데</td>
       <td>Verb</td>
       <td>351</td>
       <td>0.000100</td>
@@ -909,7 +909,7 @@ Occur_dic
     <tr>
       <th>18380</th>
       <td>다른팀(Noun)</td>
-      <td></td>
+      <td>다른팀</td>
       <td>Noun</td>
       <td>351</td>
       <td>0.000100</td>
@@ -917,7 +917,6 @@ Occur_dic
   </tbody>
 </table>
 <p>18381 rows × 5 columns</p>
-
 
 
 
