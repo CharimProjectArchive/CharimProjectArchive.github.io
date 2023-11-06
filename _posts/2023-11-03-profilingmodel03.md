@@ -4,7 +4,7 @@ title:  "Part 02. 온라인 메시지 작성자 프로파일링 모델 개발: �
 categories: Project:프로파일링_모델_개발
 tag: [Feature Engineering, NLP]
 ---
-<span style="color: #808080">#NLP #Feature Engineering #자연어 계량 #카카오톡 오픈채팅 대화 메시지</span>
+<span style="color: #808080">#NLP #modeling #성별/연령 추정</span>
 <hr>
 
 {: .notice--primary} 
