@@ -549,8 +549,8 @@ df['contents'] = df['contents'].progress_apply(duplicated_spelling_reduction)
 
 ```python
 #연속되 띄어쓰기 처리
-df['contents'] = df['contents'].apply(lambda x : re.sub(r'\s', ' ', x))  #띄어쓰기 중복 ''로 변경
-mask = df['contents'].isin([' '])
+df['contents'] = df['contents'].apply(lambda x : re.sub(r'\s', ' ', x))  # 연속된 띄어쓰기를 띄어쓰기 1칸으로 처리
+mask = df['contents'].isin([' ']) # 띄어쓰기만 존제하는 데이터 제거
 df = df[~mask].reset_index(drop = True) 
 deleted_white = df.shape[0]
 white = deleted_dup - deleted_white
