@@ -33,3 +33,203 @@ tag: [Feature Engineering, NLP]
 
 2. 변형된 표현 및 특수한 표현이 제거되지 않도록 전처리 수행
 <br><br>
+
+## 자연어 전처리
+
+
+```python
+import pandas as pd
+import numpy as np
+from tqdm import tqdm
+tqdm.pandas()
+
+import seaborn as sns
+import matplotlib
+import matplotlib.pyplot as plt
+matplotlib.rcParams['font.family'] ='Malgun Gothic'
+matplotlib.rcParams['axes.unicode_minus'] =False
+```
+
+
+
+    
+
+
+- 결측값/중복값 제거
+
+
+```python
+import re
+
+raw = df.shape[0]
+print('- raw data: {:,}'.format(raw))
+
+
+#결측값 제거
+print('- null data: {:,}'.format(df['contents'].isnull().sum()))
+df = df.dropna() 
+deleted_null = df.shape[0]
+
+
+
+#중복 제거
+df = df.drop_duplicates() 
+deleted_dup = df.shape[0]
+print('- duplicated data: {:,}'.format(deleted_null - deleted_dup))
+
+
+
+#문장 길이
+df['contents_length'] = df['contents'].apply(lambda x : len(x))
+```
+
+    - raw data: 3,564,042
+    - null data: 0
+    - duplicated data: 0
+    
+
+### 주요 이모지 및 특수표현 표제화
+
+
+```python
+def emoji_lemmatization(sentence):
+    heart_emoji = ['♡', '♥', '❤', '❤️', '🧡', '💛', '💚', '💙', '💜', '💕'] #
+    star_emoji = ['☆', '★', '⭐', '🌟']
+    kkk = ['𐨛', '𐌅', '⫬', 'ヲ', '刁', '㉪', 'ｦ']
+    Period = ['ㆍ', 'ᆞ', 'ㆍ', '•', 'ᆢ']
+    quote = ['”', '‘', '“']
+    ect = [' ', 'ㅤ']
+    
+    for i in range(len(sentence)):
+        if sentence[i] in heart_emoji:
+            sentence = sentence.replace(sentence[i], '♥')
+        elif sentence[i] in star_emoji:
+            sentence = sentence.replace(sentence[i], '★')
+        elif sentence[i] in kkk:
+            sentence = sentence.replace(sentence[i], 'ㅋ')
+        elif sentence[i] in Period:
+            sentence = sentence.replace(sentence[i], '.')
+        elif sentence[i] in quote:
+            sentence = sentence.replace(sentence[i], '\'')
+        elif sentence[i] in ect:
+            sentence = sentence.replace(sentence[i], ' ')
+        else:
+            pass
+    return(sentence)
+
+def kkk_lemmatization(sentence):
+    kkk2 =['ㅋ꙼̈', 'ㅋ̑̈', 'ㅋ̆̎', 'ㅋ̐̈', 'ㅋ̊̈', 'ㅋ̄̈', 'ㅋ̆̈', 'ㅋ̊̈', 'ㅋ̐̈', 'ㅋ̆̎']
+    
+    for i in range(len(kkk2)):
+        if kkk2[i] in sentence:
+            sentence =  sentence.replace(kkk2[i], 'ㅋ')
+        else:
+            pass
+    return(sentence)
+
+text_sentence = '❤🧡💛테스트💚💙💜☆입니다★ᆢ⭐ ヲ𐨛𐌅⫬ㅋ̄̈ㅋ꙼̈ㅋ̆̎ㅋ̐̈ㅋ̊̈ㅋ̄̈ㅋ꙼̈ㅋ̆̎ㅋ̐̈ㅋ̊̈'
+text_sentence = emoji_lemmatization(text_sentence)
+text_sentence = kkk_lemmatization(text_sentence)
+text_sentence
+```
+
+
+
+
+    '♥♥♥테스트♥♥♥★입니다★.★ ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ'
+
+
+
+
+```python
+df['contents'] = df['contents'].progress_apply(emoji_lemmatization)
+df['contents'] = df['contents'].progress_apply(kkk_lemmatization)
+```
+
+    100%|████████████████████████████████████████████████████████████████████████████| 3564042/3564042 [05:13<00:00, 11354.18it/s]
+    100%|███████████████████████████████████████████████████████████████████████████| 3564042/3564042 [00:10<00:00, 330031.43it/s]
+    
+
+### 반복되는 동일 음절 표제화 처리
+
+
+```python
+def duplicated_spelling_reduction(sentence):
+    reduced_spellings = []
+    duplicated_num = 1
+    for i in range(len(sentence)):
+        spelling = sentence[i]
+        try:
+            previous_spelling = sentence[i-1]
+            
+        except:
+            previous_spelling = 'first_spelling'
+        
+        if spelling == previous_spelling:
+            duplicated_num += 1
+        else:
+            duplicated_num = 1
+            pass
+        
+        if duplicated_num <= 5:
+            reduced_spellings.append(spelling)
+        else:
+            pass      
+        
+    reduced_sentence = ''.join(reduced_spellings).replace('   ', ' ').replace('  ', ' ')
+    return(reduced_sentence)
+
+text_sentence = '    안녕안녕 헤헤헤 ㅋㅋㅋㅋ ㅎㅎㅎㅎㅎㅎㅎㅎ ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ'
+duplicated_spelling_reduction(text_sentence)
+```
+
+
+
+
+    ' 안녕안녕 헤헤헤 ㅋㅋㅋㅋ ㅎㅎㅎㅎㅎ ㅋㅋㅋㅋㅋ'
+
+
+
+
+```python
+df['contents'] = df['contents'].progress_apply(duplicated_spelling_reduction)
+```
+
+    100%|████████████████████████████████████████████████████████████████████████████| 3564042/3564042 [02:02<00:00, 29125.25it/s]
+    
+
+### 공백(중복 띄어쓰기)/5어절 미만 문장 제거
+
+
+```python
+#띄어쓰기 문장 제거
+df['contents'] = df['contents'].apply(lambda x : re.sub(r'\s', ' ', x))  #띄어쓰기 중복 ''로 변경
+mask = df['contents'].isin([' '])
+df = df[~mask].reset_index(drop = True) 
+deleted_white = df.shape[0]
+white = deleted_dup - deleted_white
+print("- white space data: {:,}({}%)".format(white, round(white/deleted_dup*100, 2)))
+
+#어절 카운팅
+df['word_bunch'] = df['contents'].apply(lambda x: len(x.split(' ')))
+
+
+#5어절 미만 문장 제거
+cutoff = df.loc[df['word_bunch'] < 5].shape[0] 
+df = df.loc[df['word_bunch'] >= 5] 
+deleted_cutoff = df.shape[0]
+print("- cutoff data: {:,}({}%)".format(cutoff, round(cutoff/deleted_white*100, 2)))
+
+print("- total processed data: {:,}".format(deleted_cutoff))
+```
+
+    - white space data: 0(0.0%)
+    - cutoff data: 61,130(1.72%)
+    - total processed data: 3,502,912
+
+
+
+```python
+df.to_csv('SNS_FULL_Dataset(텍스트 전처리).csv', index=False)
+```
+
