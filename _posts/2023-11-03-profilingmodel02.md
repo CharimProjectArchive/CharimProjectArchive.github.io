@@ -727,7 +727,8 @@ tokenized_df.to_csv('350만_Tokenized.csv', index = False)
 **스크리닝 결과**
 - Okt 딕셔너리에 포함되지 않은 표현이 파괴됨<br>
   ⇒ 두드러지는 표현 교정(분리된 토큰 결합)
-<br>
+
+       
 - 분류가 모호하거나 부정확한 형태소 파악
   - 의미적으로 해석이 어려운 Eomi, VerbPrefix, Suffix<br>
     ⇒ 전/후 토큰과 병합 및 형태소 재분류 
