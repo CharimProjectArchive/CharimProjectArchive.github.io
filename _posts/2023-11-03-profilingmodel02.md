@@ -1050,7 +1050,7 @@ def fix_suffix_Noun2(tokenized):
 
 
 ```python
-# 해석이 모호하거나 파괴된 토큰 결헙 및 형태소 재분류류
+# 해석이 모호하거나 파괴된 토큰 결헙 및 형태소 재분류
 def restore_pos(tokenized_sentence):
     import re
     import numpy as np
@@ -1220,8 +1220,8 @@ tokenized_df.to_csv('350만_Tokenized.csv(pos 교정)', index = False)
 
 
 <br><br>
-### 03. 상대 편향도/상대 빈출도 딕셔너리 구축
-#### 1. 형태소 재분류한 토큰 딕셔너리 생성
+## 03. 상대 편향도/상대 빈출도 딕셔너리 구축
+### 형태소 재분류한 토큰 딕셔너리 생성
 
 
 ```python
@@ -1309,7 +1309,7 @@ Occur_dic.to_csv('350만_Occur_dic(pos 교정).csv', index=False)
 
 
 <br><br>
-#### 2. 성별/연령에 따른 토큰의 상대 빈출도 및 상대 편향도 계산
+### 성별/연령에 따른 토큰의 상대 빈출도 및 상대 편향도 계산
 
 
 ```python
