@@ -52,6 +52,7 @@ a. **Relative Bias of Gender**(RBG, 상별에 대한 상대 편향도)<br>
 > <br><br>
 > 작성자의 성별이 남성인 문장 $s_{male}$ 에서 표현 $t_i$ 가 등장한 비율 ÷ 여성인 문장 $s_{female}$ 에서 표현 $t_i$ 가 등장한 비율, 0~1 사이의 Skewed한 값을 가짐으로 log를 취해 정규화<br>
   ⇒ $t_i$ 가 등장했을 때 작성자의 성별이 남자 $m$ 또는 여자 $f$ 인 정도
+
 <br><br>
  b. **Relative Bias of Age**(RBG, 연령에 대한 상대 편향도)<br>
   - 표현 $t_i$ 가 등장한 문장 $s$ 의 작성자 연령이 특정 연령대 $age$ 인 정도를 설명함<br>
