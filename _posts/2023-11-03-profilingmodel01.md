@@ -8,7 +8,7 @@ tag: [EDA, NLP]
 1. 한국어 온라인 문체에서의 성별/연령 별 특징 분석 <br>
 2. 기존 NLP 및 LLM의 한국어 자연어 처리에 대한 한계 파악/대안 제시(변수 개발)<br>
 
-## 데이터 정
+## 데이터 정보
 - **출처**: [AIHUB, 한국어 SNS 데이터셋](https://www.aihub.or.kr/aihubdata/data/view.do?currMenu=115&topMenu=100&aihubDataSe=realm&dataSetSn=114)
 <br><br>
 - **데이터 속성:** 화자 성별, 연령대, 거주지역, 대화 유형, 대화 주제, 발신 시간/순서 포함
