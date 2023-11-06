@@ -75,7 +75,6 @@ a. **Relative Bias of Gender**(RBG, 상별에 대한 상대 편향도)<br>
 - 상대 편향도와 계산 방식이 유사하므로 설명은 생략함
 >  $RFG_i = ln[ p( t_i ⏐ s_{male} ) / p( t_i ⏐ s_{female} ) ]$
 >  $RFAi = ln[ p( t_i ⏐ s_{age} ) / p( t_i ⏐ s_{other} ) ]$
-<br><br>
 
 <hr>
 - 문장이 포함하는 토큰 전체에 대한 상대 편향도 및 상대 빈출도의 통계치를 계산함으로써 기존의 NLP 방식에서 소실되는 토큰 정보의 일부분 보완할 수 있음
