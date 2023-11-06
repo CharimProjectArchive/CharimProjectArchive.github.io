@@ -381,10 +381,13 @@ full_df
 <p>3835493 rows × 6 columns</p>
 </div>
 
+## 기초 탐색
+- 문장 길이, feautre 별 분포 확인
 
 
 
 ```python
+# 문장 길이 확인 및 이상치 제거
 import numpy as np
 import seaborn as sns
 import matplotlib
@@ -397,20 +400,17 @@ plt.figure(figsize=(5,3))
 plt.rc('font', size=20)
 
 print('평균', full_df['length'].mean())
-print('상위1%', full_df['length'].quantile(0.05))
-print('하위1%', full_df['length'].quantile(0.95))
+print('상위5%', full_df['length'].quantile(0.05))
+print('하위5%', full_df['length'].quantile(0.95))
 
-sns.distplot(full_df['length'])
+sns.histplot(full_df['length'])
 plt.show()
 ```
 
     평균 80.99197912758542
-    상위1% 21.0
-    하위1% 173.0
-    
+    상위5% 21.0
+    하위5% 173.0
 
-    C:\Users\hakyeong\anaconda3\lib\site-packages\seaborn\distributions.py:2619: FutureWarning: `distplot` is a deprecated function and will be removed in a future version. Please adapt your code to use either `displot` (a figure-level function with similar flexibility) or `histplot` (an axes-level function for histograms).
-      warnings.warn(msg, FutureWarning)
     
 
 
@@ -551,7 +551,7 @@ length_df
 
 
 ```python
-# 중복된 메시지 확인
+# feature는 다르지만 동일한한 메시지 확인
 dup_df = length_df[length_df['contents'].duplicated(keep=False)].sort_values('contents')
 dup_df
 ```
