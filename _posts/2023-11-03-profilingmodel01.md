@@ -586,19 +586,6 @@ dup_df
 
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -727,9 +714,3 @@ dup_df.to_excel('중복 메세지 유형 확인.xlsx', index=False)
 ```python
 raw_df.to_csv('SNS_FULL_Dataset(raw_중복된 메세지 제거).csv', index=False)
 ```
-
-
-```python
-
-```
-(SNS 200만).md…]()
