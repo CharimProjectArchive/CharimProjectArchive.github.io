@@ -601,7 +601,7 @@ a50_df = df.loc[df['age'] == '50대']
 a60_df = df.loc[df['age'] == '60대']
 a70_df = df.loc[df['age'] == '70대 이상']
 
-values = [total, male, female, a10, a20, a30, a40, a50, a60, a70]
+values = [len(df), len(m_df), len(f_df), len(a10_df), len(a20_df), len(a30_df), len(a40_df), len(a50_df), len(a60_df), len(a70_df)]
 labels = ['total', 'male', 'female', 'age10', 'age20', 'age30', 'age40', 'age50', 'age60', 'age70']
 
 plt.figure(figsize = (20, 10))
@@ -610,6 +610,7 @@ bar = plt.bar(labels, values, color='lightgray')
 plt.rcParams['font.size'] = 20
 plt.ylim(0, 4000000)
 
+# 숫자 넣는 부분
 for rect in bar:
     height = rect.get_height()
     plt.text(rect.get_x() + rect.get_width()/2.0, height, f'{height:,}\n({height/total*100:.2f}%)', ha='center', va='bottom', size = 15)
@@ -619,7 +620,7 @@ plt.show()
 
 
     
-![png](output_4_0.png)
+![png](output_13_0.png)
     
 
 
@@ -631,7 +632,7 @@ plt.show()
 
 ```python
 # topic value 분포 확인
-import scipy.stats as st
+import numpy as np, scipy.stats as st
 
 topic_list = ['개인및관계', '미용과건강', '상거래(쇼핑)', '시사교육', '식음료', '여가생활', '일과직업', '주거와생활', '행사']
 
@@ -829,6 +830,38 @@ balance_df
 
 
 ```python
+import matplotlib
+import matplotlib.pyplot as plt
+matplotlib.rcParams['font.family'] ='Malgun Gothic'
+matplotlib.rcParams['axes.unicode_minus'] =False
+
+topic = balance_df['topic']
+male = balance_df['male']
+female = balance_df['female']
+
+w = 0.2
+nrow = 9 # 행의 갯수
+idx = np.arange(nrow) #행의 갯수를 리스트로
+
+plt.figure(figsize = (10, 5))
+plt.bar(idx - w*0.5, male, width = w)
+plt.bar(idx + w*0.5, female, width = w)
+plt.rcParams['font.size'] = 20
+
+plt.grid(True, axis = 'y')
+plt.xticks(idx, topic, rotation = 30)
+plt.legend(['male', 'female'], ncol = 2) 
+plt.show()
+```
+
+
+    
+![png](output_15_0.png)
+
+
+
+
+```python
 from matplotlib import gridspec
 
 w = 0.1
@@ -842,6 +875,7 @@ a40 = balance_df['age40']
 a50 = balance_df['age50']
 a60 = balance_df['age60']
 a70 = balance_df['age70']
+
 
 fig = plt.figure(figsize=(20, 10)) 
 gs = gridspec.GridSpec(nrows=2, 
@@ -890,19 +924,19 @@ kwargs = dict(marker=[(-1, -d), (1, d)], markersize=15, linestyle="none", color=
 ax1.plot([0, 1], [0, 0], transform=ax1.transAxes, **kwargs)
 ax2.plot([0, 1], [1, 1], transform=ax2.transAxes, **kwargs)
 
-plt.xticks(idx, topic_list, rotation = 0)
+plt.xticks(idx, topic, rotation = 0)
 plt.show()
 ```
 
 
-    
-![png](output_6_0.png)
+
+![png](output_16_0.png)
 
 
 
 
 - topic 값에 대한 분포는 상당히 언밸런스함
-- 일상적인 카톡대화에서 발화되는 주제별 비율과 비슷할 것으로 보여짐
+- 하지만, 일상적인 카톡대화에서 발화되는 주제별 비율과 비슷할 것으로 보여짐
 
 
 
