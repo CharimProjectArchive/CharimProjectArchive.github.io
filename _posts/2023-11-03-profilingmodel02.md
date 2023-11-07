@@ -582,7 +582,7 @@ df.to_csv('SNS_FULL_Dataset(텍스트 전처리).csv', index=False)
 <br><br>
 ### 토크나이즈
 - konlpy 라이브러리의 Okt를 사용하여 형태소 분리
-- 동일 철자이나 다른 형태소를 갖는 토큰을 파악하기 위해 '토큰(형태소)' 형식으로 토크나이즈즈
+- 동일 철자이나 다른 형태소를 갖는 토큰을 파악하기 위해 '토큰(형태소)' 형식으로 토크나이즈
 
 ```python
 def pos_tokenizer(sentence):    #POS 기준 토크나이제이션
