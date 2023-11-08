@@ -1341,22 +1341,21 @@ re_dic.to_csv('카톡대화_pos_dic(pos 교정).csv', index=False)
 
 
 ```python
-def feature_extractor(Data, Occur_dict , col, Feature_list):
-    token_dic = Occur_dict['Token'].to_list()
+def feature_extractor(data, dic , col, features):
+    token_dic = dic['Token'].to_list()
     
-    merged_df = pd.DataFrame()
-    merged_df['Token'] = Occur_dict['Token']
-    for feature in Feature_list:
-        feature_df = Data.loc[Data[f'{col}'] == feature]
+    merged_df = dic[['Token']].copy()
+    for feature in features:
+        feature_df = data.loc[data[f'{col}'] == feature]
 
         Token_Freq_in_feature_Documents = [0 for i in range(len(token_dic))] # 특성 문서에서 특정 토큰이 출현한 횟수 
         feature_Documents_Freq_by_Token = [0 for i in range(len(token_dic))] # 특정 토큰이 출현한 특성 문서의 수
         
         total_length = len(feature_df)
-        splited_li = split_dataframe(feature_df, size=100000)
+        splited_li = split_dataframe(feature_df, size=1000)
 
-        for batch, splited_df in enumerate(splited_li):  
-            for index, row in tqdm(splited_df.iterrows(), total=len(splited_df), desc=f"{feature}_{batch+1}/{len(splited_li)}", mininterval=0.1):
+        for splited_df in tqdm(splited_li, total=len(splited_li), desc=f"{feature}"):  
+            for index, row in splited_df.iterrows():
                 token_list = row['tokenized'].split(', ') # 문서 토크나이징  
 
                 for token in token_list: # 문서에서 특정 토큰이 출현한 수
@@ -1392,7 +1391,7 @@ def feature_extractor(Data, Occur_dict , col, Feature_list):
             feature_Documents_Freq_by_Token_list.append(b)
         
         feature_df = pd.DataFrame()
-        feature_df['Token'] = Occur_dic['Token']
+        feature_df['Token'] = dic['Token'].copy()
         
         feature_Documents_num = len(feature_df)
         feature_df[f'Freq_{feature}'] = Token_Freq_in_feature_Documents_list #성별에 따른 토큰 출현 빈도
@@ -1410,7 +1409,7 @@ gender_class = ['남성', '여성']
 gender_dic = feature_extractor(df, re_dic, 'sex', gender_class)
 ```
 
-    남성_1/8: 100%|██████████████████████████████████████████████████████████████████████| 100000/100000 [11:33<00:00, 144.14it/s]
+    남성: 100%|██████████████████████████████████████████████████████████████████████| 26/26 [00:13<00:00, 1.99it/s]
     ...생략...
 
 
@@ -1421,7 +1420,7 @@ age_class = ['20대 미만', '20대', '30대', '40대', '50대', '60대', '70대
 age_dic = feature_extractor(df, re_dic, 'age', age_class)
 ```
 
-    20대 미만_1/2: 100%|█████████████████████████████████████████████████████████████████| 100000/100000 [11:40<00:00, 142.79it/s]
+    20대 미만: 100%|█████████████████████████████████████████████████████████████████| 102/102 [11:40<00:00, 1.98it/s]
     ...생략...
 
 
