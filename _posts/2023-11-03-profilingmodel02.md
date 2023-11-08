@@ -712,32 +712,6 @@ https://docs.google.com/spreadsheets/d/1wKv4hAfJD_ToORv1Q7QGWsCjYUQTZKHRzZMNCxVP
 
 
 
-```python
-#메모리아웃 되는 것을 방지하기 위해 데이터를 일정 크기 이하로 Split
-def split_dataframe(dataframe):
-    total_length = len(dataframe)
-    splited_li = []  # splited_li는 반드시 초기화되어야 합니다.
-
-    if len(dataframe) > 100000:
-        split_size = 100000
-        num_split = total_length // split_size + 1
-
-        for i in range(num_split):
-            start_idx = i * split_size
-            end_idx = (i + 1) * split_size
-            try:
-                splited = dataframe[start_idx:end_idx]
-            except:
-                splited = dataframe[start_idx:]
-
-            # 작은 그룹을 리스트에 추가
-            splited_li.append(splited)
-    else:
-        splited_li.append(dataframe)
-    return splited_li
-```
-
-
 
 ```python
 def occur_countor(df):
@@ -1339,12 +1313,7 @@ tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(fix_suffix_
 tokenized_df.to_csv('카톡대화_Tokenized.csv(pos 교정)', index = False)
 ```
 
-```python
-re_dic = occur_countor(tokenized_df)
-re_dic[['word', 'pos']] = Occur_dic['Token'].apply(lambda x: pd.Series(word_pos_split(x)))
-re_dic = re_dic[['Token', 'word', 'pos', 'Token_freq', 'Total_ratio']]
-re_dic.to_csv('카톡대화_pos_dic(pos 교정).csv', index=False)
-```
+
 
 
 <br><br>
@@ -1352,88 +1321,16 @@ re_dic.to_csv('카톡대화_pos_dic(pos 교정).csv', index=False)
 ### 형태소 재분류한 딕셔너리 생성
 
 
-```python
-#메모리아웃 되는 것을 방지하기 위해 데이터를 일정 크기 이하로 Split
-def split_dataframe(dataframe):
-    total_length = len(dataframe)
-    splited_li = []  # splited_li는 반드시 초기화되어야 합니다.
-
-    if len(dataframe) > 100000:
-        split_size = 100000
-        num_split = total_length // split_size + 1
-
-        for i in range(num_split):
-            start_idx = i * split_size
-            end_idx = (i + 1) * split_size
-            try:
-                splited = dataframe[start_idx:end_idx]
-            except:
-                splited = dataframe[start_idx:]
-
-            # 작은 그룹을 리스트에 추가
-            splited_li.append(splited)
-    else:
-        splited_li.append(dataframe)
-    return splited_li
-```
 
 
 ```python
-def occur_countor(df):
-    total_length = len(df)
-    splited_li = split_dataframe(df)
-
-    Occur_dict = {}
-    for splited_df in splited_li: 
-        merge_list = []
-        for index, row in tqdm(splited_df.iterrows(), total=len(splited_df), desc="전체 토큰 병합", mininterval=0.1):
-            token_list = row['tokenized'].split(', ')
-            for token in token_list:
-                merge_list.append(token)
-
-        count_list = Counter(merge_list).most_common()
-
-        sort_arry = []
-        for d, c in tqdm(count_list, total=len(count_list), desc="빈도순 정렬", mininterval=0.1):
-            for i in range(c):
-                sort_arry.append(d)
-
-        unique_dic = Counter(sort_arry)
-        unique_token = list(unique_dic.keys())
-        unique_freq = list(unique_dic.values())
-        
-        for key, value in zip(unique_token, unique_freq):  # zip을 사용하여 두 리스트를 동시에 순회
-            if key in Occur_dict:
-                Occur_dict[key] += value
-            else:
-                Occur_dict[key] = value
-
-    token_li = Occur_dict.keys()
-    freq_li = Occur_dict.values()
-
-    Occur_dic = pd.DataFrame({'Token': token_li, 'Token_freq': freq_li})
-    Occur_dic = Occur_dic.sort_values(by=['Token_freq'], ascending=False).reset_index(drop=True) 
-    Occur_dic['Total_ratio'] = Occur_dic['Token_freq'].apply(lambda x: x/total_length)
-    Occur_dic = Occur_dic.loc[Occur_dic['Total_ratio'] >= 0.0001]
-    return Occur_dic
+re_dic = occur_countor(tokenized_df)
+re_dic['word'], re_dic['pos'] = zip(*Occur_dic['Token'].apply(lambda x: word_pos_split(x)))
+re_dic = re_dic[['Token', 'word', 'pos', 'Token_freq', 'Total_ratio']]
+re_dic.to_csv('카톡대화_pos_dic(pos 교정).csv', index=False)
 ```
 
 
-```python
-Occur_dic = occur_countor(tokenized_df)
-Occur_dic
-```
-
-    전체 토큰 병합: 100%|██████████████████████████████████████████████████████████████| 100000/100000 [00:04<00:00, 23878.38it/s]
-    빈도순 정렬: 100%|████████████████████████████████████████████████████████████████| 212146/212146 [00:00<00:00, 502799.24it/s]
-    ...생략...
-
-
-
-
-```python
-Occur_dic.to_csv('350만_Occur_dic(pos 교정).csv', index=False)
-```
 
 
 <br><br>
@@ -1453,7 +1350,7 @@ def feature_extractor(Data, Occur_dict , col, Feature_list):
         feature_Documents_Freq_by_Token = [0 for i in range(len(token_dic))] # 특정 토큰이 출현한 특성 문서의 수
         
         total_length = len(feature_df)
-        splited_li = split_dataframe(feature_df)
+        splited_li = split_dataframe(feature_df, size=100000)
 
         for batch, splited_df in enumerate(splited_li):  
             for index, row in tqdm(splited_df.iterrows(), total=len(splited_df), desc=f"{feature}_{batch+1}/{len(splited_li)}", mininterval=0.1):
@@ -1507,7 +1404,7 @@ def feature_extractor(Data, Occur_dict , col, Feature_list):
 
 ```python
 gender_class = ['남성', '여성']
-gender_dic = feature_extractor(df, Occur_dic, 'sex', gender_class)
+gender_dic = feature_extractor(df, re_dic, 'sex', gender_class)
 ```
 
     남성_1/8: 100%|██████████████████████████████████████████████████████████████████████| 100000/100000 [11:33<00:00, 144.14it/s]
@@ -1518,7 +1415,7 @@ gender_dic = feature_extractor(df, Occur_dic, 'sex', gender_class)
 
 ```python
 age_class = ['20대 미만', '20대', '30대', '40대', '50대', '60대', '70대 이상'] #
-age_dic = feature_extractor(df, Occur_dic, 'age', age_class)
+age_dic = feature_extractor(df, re_dic, 'age', age_class)
 ```
 
     20대 미만_1/2: 100%|█████████████████████████████████████████████████████████████████| 100000/100000 [11:40<00:00, 142.79it/s]
@@ -1563,10 +1460,7 @@ other_dic['Bias_ratio_other70'] = (age_dic['Bias_20대 미만'] + age_dic['Bias_
 
 
 ```python
-relative_dic = pd.DataFrame()
-relative_dic['Token'] = Occur_dic['Token']
-relative_dic['Token_freq'] = Occur_dic['Token_freq']
-relative_dic['Total_ratio'] = Occur_dic['Total_ratio']
+relative_dic = Occur_dic[['Token', 'Token_freq', 'Total_ratio']].copy()
 
 #성별에 대한 
 relative_dic['Gender_Freq'] = np.log(gender_dic['Freq_ratio_남성']/gender_dic['Freq_ratio_여성']) # 성별 상대 빈출도
@@ -1602,39 +1496,7 @@ relative_dic
 
 
 ```python
-def word_seperator_in_list(token):    
-    idx_arry = []
-    idx = 0
-    for t in str(token):
-        if t == '(':
-            idx_arry.append(idx)
-        else:
-            pass
-        idx += 1
-
-    s_index = idx_arry[-1]
-    w = token[:s_index]
-    return(w)
-
-def pos_seperator_in_list(token):    
-    idx_arry = []
-    idx = 0
-    for t in str(token):
-        if t == '(':
-            idx_arry.append(idx)
-        else:
-            pass
-        idx += 1
-
-    s_index = idx_arry[-1]
-    p = token[s_index+1:-1]
-    return(p)
-```
-
-
-```python
-relative_dic['word'] = relative_dic['Token'].apply(lambda x: ''.join(x.split('(')[:-1]))
-relative_dic['pos'] = relative_dic['Token'].apply(lambda x: x.split('(')[-1].replace(')', ''))
+relative_dic['word'], relative_dic['pos'] = zip(*relative_dic['Token'].apply(lambda x: word_pos_split(x)))
 
 relative_dic = relative_dic[['Token', 'word', 'pos', 'Token_freq', 'Total_ratio',
                              'Gender_Freq', 'Gender_Bias', 
@@ -1948,7 +1810,7 @@ relative_dic
 
 
 ```python
-relative_dic.to_csv('350만_feature_dic.csv', index=False)
+relative_dic.to_csv('카톡대_feature_dic.csv', index=False)
 ```
 
 
