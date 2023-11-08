@@ -1,8 +1,8 @@
 ---
 layout: single
-title:  "Part 03. 온라인 메시지 작성자 프로파일링 모델 개발: LLM 전이학습 모델 테스트"
+title:  "Part 03. 온라인 메시지 작성자 프로파일링 모델 개발: EDA"
 categories: Project:프로파일링_모델_개발
-tag: [Feature Engineering, NLP]
+tag: [EDA, 분포분석, 빈도분석, 군집분석, 로짓분석, 변수유의성검토]
 ---
 <span style="color: #808080">#NLP #modeling #성별/연령 추정</span>
 <hr>
