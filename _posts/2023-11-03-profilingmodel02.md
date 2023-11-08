@@ -100,7 +100,7 @@ import re
 import numpy as np
 from collections import Counter
 
-df = pd.read_csv("SNS_FULL_Dataset(raw_중복된 메세지 제거).csv")
+df = pd.read_csv("카톡대화_Dataset(raw_중복된 메세지 제거).csv")
 ```
 
 
@@ -214,24 +214,10 @@ print(symbol_complexity('ㅠㅠ 안녕😘😘😘 😘😘'))
 
 
 ```python
-#데이터프레임 컬럼값으로 변환
-df['spell_complexity'] = df['contents'].progress_apply(lambda x:spell_complexity(str(x)))
-df['spell_num'] = df['spell_complexity'].progress_apply(lambda x:x[0])
-df['spell_mean'] = df['spell_complexity'].progress_apply(lambda x:x[1])
-df['spell_std'] = df['spell_complexity'].progress_apply(lambda x:x[2])
-df['spell_max'] = df['spell_complexity'].progress_apply(lambda x:x[3])
-df['spell_min'] = df['spell_complexity'].progress_apply(lambda x:x[4])
+df['spell_num'],df['spell_mean'], df['spell_std'], df['spell_max'], df['spell_min'] = zip(*df['contents'].progress_apply(lambda x: spell_complexity(str(x))))
+df['symbol_num'], df['symbol_mean'],  df['symbol_std'], df['symbol_max'], df['symbol_min'] = zip(*df['contents'].progress_apply(lambda x: symbol_complexity(str(x))))
 
-
-df['symbol_complexity'] = df['contents'].progress_apply(lambda x:symbol_complexity(str(x)))
-df['symbol_num'] = df['symbol_complexity'].progress_apply(lambda x:x[0])
-df['symbol_mean'] = df['symbol_complexity'].progress_apply(lambda x:x[1])
-df['symbol_std'] = df['symbol_complexity'].progress_apply(lambda x:x[2])
-df['symbol_max'] = df['symbol_complexity'].progress_apply(lambda x:x[3])
-df['symbol_min'] = df['symbol_complexity'].progress_apply(lambda x:x[4])
-
-
-df = df.drop(columns={'spell_complexity', 'symbol_complexity'})
+df = df.drop(columns=['topic', 'resident'])
 df = df.fillna(0)
 df
 ```
@@ -391,7 +377,7 @@ df
 
 
 ```python
-df.to_csv('SNS_FULL_Dataset(raw_표현 복잡도 계산).csv', index=False)
+df.to_csv('카톡대화_Dataset(raw_표현 복잡도 계산).csv', index=False)
 ```
 
 
@@ -401,32 +387,31 @@ df.to_csv('SNS_FULL_Dataset(raw_표현 복잡도 계산).csv', index=False)
 - 3번 이상 반복되는 동일 음절은 3음절로 표제화 *ex. ㅇㅇㅇㅇㅇ ⇒ ㅇㅇㅇ
 - 문장기호, 특수기호, 이모지, 특수폰트 표현 표제화 *ex. ❤🧡💛 ⇒ ♥️♥️♥️ / ヲ𐨛𐌅⫬ ⇒ ㅋㅋㅋㅋ
 - 연속된 띄어쓰기(공백) 한 번으로 처리
-- 5어절 미만 말뭉치 데이터 제거 
+- 5어절 미만 말뭉치 데이터 제거
+
+
+  
+```python
+processed_df = df[['sex', 'age', 'contents', 'length']].copy()
+```
+
 
 
 ```python
 import re
 
-raw = df.shape[0]
+raw = processed_df.shape[0]
 print('- raw data: {:,}'.format(raw))
 
-
 #결측값 제거
-print('- null data: {:,}'.format(df['contents'].isnull().sum()))
-df = df.dropna() 
-deleted_null = df.shape[0]
-
-
+print('- null data: {:,}'.format(processed_df['contents'].isnull().sum()))
+processed_df = processed_df.dropna() 
+deleted_null = processed_df.shape[0]
 
 #중복 제거
-df = df.drop_duplicates() 
-deleted_dup = df.shape[0]
+processed_df = processed_df.drop_duplicates() 
+deleted_dup = processed_df.shape[0]
 print('- duplicated data: {:,}'.format(deleted_null - deleted_dup))
-
-
-
-#문장 길이 컬럼 추가가
-df['contents_length'] = df['contents'].apply(lambda x : len(x))
 ```
 
     - raw data: 3,564,042
@@ -438,44 +423,30 @@ df['contents_length'] = df['contents'].apply(lambda x : len(x))
 
 
 ```python
-def emoji_lemmatization(sentence):
-    heart_emoji = ['♡', '♥', '❤', '❤️', '🧡', '💛', '💚', '💙', '💜', '💕'] #
+def specific_lemmatization(sentence):
+    heart_emoji = ['♡', '♥', '❤', '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '💕', '❣️'] #
     star_emoji = ['☆', '★', '⭐', '🌟']
-    kkk = ['𐨛', '𐌅', '⫬', 'ヲ', '刁', '㉪', 'ｦ']
+    kkk = ['𐨛', '𐌅', '⫬', 'ヲ', '刁', '㉪', 'ｦ', 'ㅋ꙼̈', 'ㅋ̑̈', 'ㅋ̆̎', 'ㅋ̐̈', 'ㅋ̊̈', 'ㅋ̄̈', 'ㅋ̆̈', 'ㅋ̊̈', 'ㅋ̐̈', 'ㅋ̆̎']
     Period = ['ㆍ', 'ᆞ', 'ㆍ', '•', 'ᆢ']
     quote = ['”', '‘', '“']
     ect = [' ', 'ㅤ']
     
-    for i in range(len(sentence)):
-        if sentence[i] in heart_emoji:
-            sentence = sentence.replace(sentence[i], '♥')
-        elif sentence[i] in star_emoji:
-            sentence = sentence.replace(sentence[i], '★')
-        elif sentence[i] in kkk:
-            sentence = sentence.replace(sentence[i], 'ㅋ')
-        elif sentence[i] in Period:
-            sentence = sentence.replace(sentence[i], '.')
-        elif sentence[i] in quote:
-            sentence = sentence.replace(sentence[i], '\'')
-        elif sentence[i] in ect:
-            sentence = sentence.replace(sentence[i], ' ')
-        else:
-            pass
-    return(sentence)
-
-def kkk_lemmatization(sentence):
-    kkk2 =['ㅋ꙼̈', 'ㅋ̑̈', 'ㅋ̆̎', 'ㅋ̐̈', 'ㅋ̊̈', 'ㅋ̄̈', 'ㅋ̆̈', 'ㅋ̊̈', 'ㅋ̐̈', 'ㅋ̆̎']
-    
-    for i in range(len(kkk2)):
-        if kkk2[i] in sentence:
-            sentence =  sentence.replace(kkk2[i], 'ㅋ')
-        else:
-            pass
-    return(sentence)
+    for h in heart_emoji:
+        sentence = sentence.replace(h, '♥')
+    for s in star_emoji:
+        sentence = sentence.replace(s, '★')
+    for k in kkk:
+        sentence = sentence.replace(k, 'ㅋ')
+    for p in Period:
+        sentence = sentence.replace(p, '·')
+    for q in quote:
+        sentence = sentence.replace(q, '\'')
+    for e in ect:
+        sentence = sentence.replace(e, ' ')   
+    return sentence
 
 text_sentence = '❤🧡💛테스트💚💙💜☆입니다★ᆢ⭐ ヲ𐨛𐌅⫬ㅋ̄̈ㅋ꙼̈ㅋ̆̎ㅋ̐̈ㅋ̊̈ㅋ̄̈ㅋ꙼̈ㅋ̆̎ㅋ̐̈ㅋ̊̈'
-text_sentence = emoji_lemmatization(text_sentence)
-text_sentence = kkk_lemmatization(text_sentence)
+text_sentence = specific_lemmatization(text_sentence)
 text_sentence
 ```
 
@@ -488,12 +459,11 @@ text_sentence
 
 
 ```python
-df['contents'] = df['contents'].progress_apply(emoji_lemmatization)
-df['contents'] = df['contents'].progress_apply(kkk_lemmatization)
+processed_df['contents'] = processed_df['contents'].progress_apply(specific_lemmatization)
 ```
 
     100%|████████████████████████████████████████████████████████████████████████████| 3564042/3564042 [05:13<00:00, 11354.18it/s]
-    100%|███████████████████████████████████████████████████████████████████████████| 3564042/3564042 [00:10<00:00, 330031.43it/s]
+
     
 <br><br>
 ### 반복되는 동일 음절 표제화 처리
@@ -501,31 +471,15 @@ df['contents'] = df['contents'].progress_apply(kkk_lemmatization)
 
 ```python
 def duplicated_spelling_reduction(sentence):
-    reduced_spellings = []
-    duplicated_num = 1
-    for i in range(len(sentence)):
-        spelling = sentence[i]
-        try:
-            previous_spelling = sentence[i-1]
-            
-        except:
-            previous_spelling = 'first_spelling'
-        
-        if spelling == previous_spelling:
-            duplicated_num += 1
-        else:
-            duplicated_num = 1
-            pass
-        
-        if duplicated_num <= 5:
-            reduced_spellings.append(spelling)
-        else:
-            pass      
-        
-    reduced_sentence = ''.join(reduced_spellings).replace('   ', ' ').replace('  ', ' ')
-    return(reduced_sentence)
+    words = sentence.split()
 
-text_sentence = '    안녕안녕 헤헤헤 ㅋㅋㅋㅋ ㅎㅎㅎㅎㅎㅎㅎㅎ ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ'
+    for word in words:
+        pattern = re.compile(r'(\w)\1{4,}')
+        re_word = pattern.sub(r'\1' * 5, word)
+        sentence = sentence.replace(word, re_word)
+    return sentence
+
+text_sentence = '    안녕안녕 헤헤헤헤헤헤 ㅋㅋㅋㅋ ㅎㅎㅎㅎㅎㅎㅎㅎ ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ'
 duplicated_spelling_reduction(text_sentence)
 ```
 
@@ -538,7 +492,7 @@ duplicated_spelling_reduction(text_sentence)
 
 
 ```python
-df['contents'] = df['contents'].progress_apply(duplicated_spelling_reduction)
+processed_df['contents'] = processed_df['contents'].progress_apply(duplicated_spelling_reduction)
 ```
 
     100%|████████████████████████████████████████████████████████████████████████████| 3564042/3564042 [02:02<00:00, 29125.25it/s]
@@ -549,33 +503,33 @@ df['contents'] = df['contents'].progress_apply(duplicated_spelling_reduction)
 
 ```python
 #연속되 띄어쓰기 처리
-df['contents'] = df['contents'].apply(lambda x : re.sub(r'\s', ' ', x))  # 연속된 띄어쓰기를 띄어쓰기 1칸으로 처리
-mask = df['contents'].isin([' ']) # 띄어쓰기만 존제하는 데이터 제거
-df = df[~mask].reset_index(drop = True) 
-deleted_white = df.shape[0]
+processed_df['contents'] = processed_df['contents'].apply(lambda x : re.sub(r'\s+', ' ', x))  #연속된 띄어쓰기 ' '로 변경
+mask = processed_df['contents'].isin([' '])
+processed_df = processed_df[~mask].reset_index(drop = True) 
+deleted_white = processed_df.shape[0]
 white = deleted_dup - deleted_white
 print("- white space data: {:,}({}%)".format(white, round(white/deleted_dup*100, 2)))
+
+#어절 카운팅
+processed_df['word_bunch'] = processed_df['contents'].apply(lambda x: len(x.split(' ')))
+
+
+#5어절 미만 문장 제거
+cutoff = processed_df.loc[processed_df['word_bunch'] < 5].shape[0] 
+processed_df = processed_df.loc[processed_df['word_bunch'] >= 5] 
+deleted_cutoff = processed_df.shape[0]
+print("- cutoff data: {:,}({}%)".format(cutoff, round(cutoff/deleted_white*100, 2)))
+
+print("- total processed data: {:,}".format(deleted_cutoff))
 ```
 
     - white space data: 0(0.0%)
+    - cutoff data: 61,139(1.72%)
+    - total processed data: 3,502,903
 
 
 ```python
-#5어절 미만 문장 제거
-df['word_bunch'] = df['contents'].apply(lambda x: len(x.split(' '))) # 어절 카운팅
-
-cutoff = df.loc[df['word_bunch'] < 5].shape[0] 
-df = df.loc[df['word_bunch'] >= 5] 
-deleted_cutoff = df.shape[0]
-print("- cutoff data: {:,}({}%)".format(cutoff, round(cutoff/deleted_white*100, 2)))
-```
-
-    - cutoff data: 61,130(1.72%)
-
-
-
-```python
-df.to_csv('SNS_FULL_Dataset(텍스트 전처리).csv', index=False)
+processed_df.to_csv('카톡대화_Dataset(전처리).csv', index=False)
 ```
 
 
@@ -596,30 +550,48 @@ def pos_tokenizer(sentence):    #POS 기준 토크나이제이션
         token_arry.append(token)
     
     token_count = len(token_arry)
-    tokenized_sentence = ', '.join(token_arry)
+    tokenized_sentence = ' '.join(token_arry)
     return tokenized_sentence, token_count
+```
+
+
+
+```python
+#메모리아웃 되는 것을 방지하기 위해 데이터를 일정 크기 이하로 Split
+def split_dataframe(dataframe, size=100000):
+    total_length = len(dataframe)
+    splited_li = []  # splited_li는 반드시 초기화되어야 합니다.
+
+    if len(dataframe) > size:
+        split_size = size
+        num_split = total_length // split_size + 1
+
+        for i in range(num_split):
+            start_idx = i * split_size
+            end_idx = (i + 1) * split_size
+            try:
+                splited = dataframe[start_idx:end_idx]
+            except:
+                splited = dataframe[start_idx:]
+
+            # 작은 그룹을 리스트에 추가
+            splited_li.append(splited)
+    else:
+        splited_li.append(dataframe)
+    return splited_li
 ```
 
 
 ```python
 # 데이터가 커서 분리하여 처리
-df1 = df[:600000]
-df2 = df[600000:1200000]
-df3 = df[1200000:1800000]
-df4 = df[1800000:2400000]
-df5 = df[2400000:3000000]
-df6 = df[3000000:]
+df_li = split_dataframe(processed_df, size=1000)
 
-df_li = [df1, df2, df3, df4, df5, df6]
-
-for d in df_li:
-    d['tokenized'] = d['contents'].progress_apply(pos_tokenizer)
-    d['tokenized'] = d['tokenized'].progress_apply(lambda x : x[0])
-    d['token_count'] = d['tokenized'].progress_apply(lambda x: x[1])
+tokenized_df = processed_df[['sex, age, contents']].copy()
+for d in tqdm(df_li, total=len(df_li), desc='토크나이징', mininterval=0.5):
+    d['tokenized'], d['token_count'] = zip(*d['contents'].apply(lambda x: pos_tokenizer(x)))
     
 tokenized_df = pd.concat(df_li, ignore_index=True)
-tokenized_df = tokenized_df.drop(columns={'tokenized'})
-tokenized_df[['sex', 'age', 'contents', 'tokenized', 'token_count']]
+tokenized_df
 ```
 
     100%|████████████████████████████████████████████████████████████████████████████████| 600000/600000 [36:11<00:00, 276.37it/s]
@@ -714,7 +686,7 @@ tokenized_df[['sex', 'age', 'contents', 'tokenized', 'token_count']]
 
 
 ```python
-tokenized_df.to_csv('350만_Tokenized.csv', index = False)
+tokenized_df.to_csv('카톡대화_Tokenized(pos 비교정).csv', index = False)
 ```
 
 
@@ -807,14 +779,22 @@ def occur_countor(df):
     return Occur_dic
 ```
 
+```python
+def word_pos_split(token):
+    index_li = []
+    for i, char in enumerate(token):
+        if char == '(':
+            index_li.append(i)
+    return token[:index_li[-1]], token[index_li[-1]+1:-1]
+```
 
 
 
 ```python
-Occur_dic['word'] = Occur_dic['Token'].apply(lambda x: ''.join(x.split('(')[:-1]))
-Occur_dic['pos'] = Occur_dic['Token'].apply(lambda x: x.split('(')[-1].replace(')', ''))
-Occur_dic = Occur_dic[['Token', 'word', 'pos', 'Token_freq', 'Total_ratio']]
-Occur_dic
+pos_dic = occur_countor(tokenized_df)
+pos_dic['word'], pos_dic['pos'] = zip(*pos_dic['Token'].apply(lambda x: word_pos_split(x)))
+pos_dic = pos_dic[['Token', 'word', 'pos', 'Token_freq', 'Total_ratio']]
+pos_dic
 ```
 
 
@@ -926,7 +906,7 @@ Occur_dic
 
 
 ```python
-Occur_dic.to_csv('350만_Occur_dic.csv', index=False)
+pos_dic.to_csv('카톡대화_pos_dic.csv', index=False)
 ```
 
 
@@ -939,71 +919,71 @@ Occur_dic.to_csv('350만_Occur_dic.csv', index=False)
 ```python
 # 오분류되는 주요 토큰 형태소 재분류
 def fix_foreign(tokenized):
-    missing_Adverb = [', 후에(Foreign)', ', 후(Foreign)', ', 초에(Foreign)', ', 쯤에(Foreign)',
-                      ', 쯤(Foreign)', ', 정도에(Foreign)', ', 정도(Foreign)', ', 전에는(Foreign)',
-                      ', 전에(Foreign)', ', 전(Foreign)', ', 이상(Foreign)', ', 안에(Foreign)',
-                      ', 부터는(Foreign)', ', 부터(Foreign)', ', 반쯤(Foreign)', ', 반에(Foreign)',
-                      ', 반부터(Foreign)', ', 반까지(Foreign)', ', 반(Foreign)', ', 밖에(Foreign)',
-                      ', 말에(Foreign)', ', 말(Foreign)', ', 만에(Foreign)', ', 만(Foreign)',
-                      ', 마다(Foreign)', ', 뒤에(Foreign)', ', 뒤(Foreign)', ', 동안(Foreign)',
+    missing_Adverb = ['후에(Foreign)', '후(Foreign)', '초에(Foreign)', '쯤에(Foreign)',
+                      '쯤(Foreign)', '정도에(Foreign)', '정도(Foreign)', '전에는(Foreign)',
+                      '전에(Foreign)', '전(Foreign)', '이상(Foreign)', '안에(Foreign)',
+                      '부터는(Foreign)', '부터(Foreign)', '반쯤(Foreign)', '반에(Foreign)',
+                      '반부터(Foreign)', '반까지(Foreign)', '반(Foreign)', '밖에(Foreign)',
+                      '말에(Foreign)', '말(Foreign)', '만에(Foreign)', '만(Foreign)',
+                      '마다(Foreign)', '뒤에(Foreign)', '뒤(Foreign)', '동안(Foreign)',
                     
-                      ', 넘어서(Foreign)', ', 넘게(Foreign)', ', 남음(Foreign)', ', 꺼(Foreign)',
-                      ', 까진데(Foreign)', ', 까진(Foreign)', ', 까지야(Foreign)', ', 까지만(Foreign)',
-                      ', 까지는(Foreign)', ', 까지(Foreign)', ', 간(Foreign)', ', 이후(Foreign)',
-                      ', 이후에(Foreign)', ', 내로(Foreign)', ', 경(Foreign)', ', 말까지(Foreign)',
-                      ', 전까지(Foreign)', ', 중에(Foreign)', ', 즘(Foreign)', ', 내내(Foreign)',
-                      ', 정도는(Foreign)', ', 초(Foreign)', ', 얼마(Foreign)', ', 정도면(Foreign)',
-                      ', 이내(Foreign)', ', 내(Foreign)', ', 간의(Foreign)', ', 간은(Foreign)',
-                      ', 약(Foreign)', ', 보다(Foreign)', ', 전엔(Foreign)', ', 까지니까(Foreign)',
-                      ', 정도만(Foreign)', ', 사이에(Foreign)', ', 뒤면(Foreign)', ', 식(Foreign)'
+                      '넘어서(Foreign)', '넘게(Foreign)', '남음(Foreign)', '꺼(Foreign)',
+                      '까진데(Foreign)', '까진(Foreign)', '까지야(Foreign)', '까지만(Foreign)',
+                      '까지는(Foreign)', '까지(Foreign)', '간(Foreign)', '이후(Foreign)',
+                      '이후에(Foreign)', '내로(Foreign)', '경(Foreign)', '말까지(Foreign)',
+                      '전까지(Foreign)', '중에(Foreign)', '즘(Foreign)', '내내(Foreign)',
+                      '정도는(Foreign)', '초(Foreign)', '얼마(Foreign)', '정도면(Foreign)',
+                      '이내(Foreign)', '내(Foreign)', '간의(Foreign)', '간은(Foreign)',
+                      '약(Foreign)', '보다(Foreign)', '전엔(Foreign)', '까지니까(Foreign)',
+                      '정도만(Foreign)', '사이에(Foreign)', '뒤면(Foreign)', '식(Foreign)'
                      ]
 
     
-    missing_Josa = [', 이면(Foreign)', ', 이랑(Foreign)', ', 이라서(Foreign)', ', 이라도(Foreign)',
-                    ', 이라고(Foreign)', ', 이라(Foreign)', ', 이나(Foreign)', ', 이고(Foreign)',
-                    ', 이(Foreign)', ', 의(Foreign)', ', 을(Foreign)', ', 은(Foreign)',
-                    ', 으로(Foreign)', ', 엔(Foreign)', ', 에서(Foreign)', ', 에도(Foreign)',
-                    ', 에는(Foreign)', ', 에(Foreign)', ', 면(Foreign)', ', 로(Foreign)',
-                    ', 는(Foreign)', ', 나(Foreign)', ', 가(Foreign)', ', 라고(Foreign)'
-                    ', 이라는(Foreign)', ', 께(Foreign)', ', 를(Foreign)', ', 께(Foreign)',
-                    ', 고(Foreign)'
+    missing_Josa = ['이면(Foreign)', '이랑(Foreign)', '이라서(Foreign)', '이라도(Foreign)',
+                    '이라고(Foreign)', '이라(Foreign)', '이나(Foreign)', '이고(Foreign)',
+                    '이(Foreign)', '의(Foreign)', '을(Foreign)', '은(Foreign)',
+                    '으로(Foreign)', '엔(Foreign)', '에서(Foreign)', '에도(Foreign)',
+                    '에는(Foreign)', '에(Foreign)', '면(Foreign)', '로(Foreign)',
+                    '는(Foreign)', '나(Foreign)', '가(Foreign)', '라고(Foreign)'
+                    '이라는(Foreign)', '께(Foreign)', '를(Foreign)', '께(Foreign)',
+                    '고(Foreign)'
                    ]
     
     
-    missing_Verb = [', 하면(Foreign)', ', 하고(Foreign)', ', 주고(Foreign)', ', 되면(Foreign)',
-                    ', 된(Foreign)', ', 해서(Foreign)', ', 이며(Foreign)'
+    missing_Verb = ['하면(Foreign)', '하고(Foreign)', '주고(Foreign)', '되면(Foreign)',
+                    '된(Foreign)', '해서(Foreign)', '이며(Foreign)'
                    ]
     
     
     
-    missing_Suffix = [', 어치(Foreign)', ', 치(Foreign)', ', 차(Foreign)', ', 째(Foreign)',
-                    ', 짜리(Foreign)', ', 씩(Foreign)', ', 생(Foreign)', ', 명(Foreign)',
-                    ', 대(Foreign)', ', 달에(Foreign)', ', 달(Foreign)', ', 도에(Foreign)',
-                    ', 도(Foreign)', ', 날(Foreign)', ', 급(Foreign)', ', 언(Foreign)',
-                    ', 개(Foreign)', '용(Foreign)', '형(Foreign)', '대의(Foreign)',
-                    ', 가량(Foreign)', ', 기(Foreign)', ', 부(Foreign)', ', 급의(Foreign)',
-                    ', 제(Foreign)', ', 당(Foreign)', ', 개의(Foreign)', ', 권(Foreign)',
-                    ', 불(Foreign)', ', 때(Foreign)', ', 짜리가(Foreign)'
+    missing_Suffix = ['어치(Foreign)', '치(Foreign)', '차(Foreign)', '째(Foreign)',
+                      '짜리(Foreign)', '씩(Foreign)', '생(Foreign)', '명(Foreign)',
+                      '대(Foreign)', '달에(Foreign)', '달(Foreign)', '도에(Foreign)',
+                      '도(Foreign)', '날(Foreign)', '급(Foreign)', '언(Foreign)',
+                      '개(Foreign)', '용(Foreign)', '형(Foreign)', '대의(Foreign)',
+                      '가량(Foreign)', '기(Foreign)', '부(Foreign)', '급의(Foreign)',
+                      '제(Foreign)', '당(Foreign)', '개의(Foreign)', '권(Foreign)',
+                      '불(Foreign)', '때(Foreign)', '짜리가(Foreign)'
                      ]
     
     
-    missing_Noun = [', 도착(Foreign)', ', 퇴근(Foreign)', ', 컷(Foreign)', ', 각(Foreign)',
-                    ', 걸림(Foreign)', ', 출발(Foreign)', ', 리즈(Foreign)', ', 도서(Foreign)',
-                    ', 펀딩(Foreign)', ', 결제(Foreign)', ', 발송(Foreign)', ', 배송(Foreign)',
-                    ', 기준(Foreign)', ', 규정(Foreign)', ', 와디즈(Foreign)', ', 무상(Foreign)',
-                    ', 리워드(Foreign)', ', 출근(Foreign)', ', 거리(Foreign)'
+    missing_Noun = ['도착(Foreign)', '퇴근(Foreign)', '컷(Foreign)', '각(Foreign)',
+                    '걸림(Foreign)', '출발(Foreign)', '리즈(Foreign)', '도서(Foreign)',
+                    '펀딩(Foreign)', '결제(Foreign)', '발송(Foreign)', '배송(Foreign)',
+                    '기준(Foreign)', '규정(Foreign)', '와디즈(Foreign)', '무상(Foreign)',
+                    '리워드(Foreign)', '출근(Foreign)', '거리(Foreign)'
                    ]
     
     
-    missing_Eomi = [', 입니다(Foreign)', ', 임(Foreign)', ', 인디(Foreign)', ', 인데(Foreign)',
-                    ', 인가(Foreign)', ', 이지(Foreign)', ', 이요(Foreign)', ', 이여(Foreign)',
-                    ', 이야(Foreign)', ', 이래(Foreign)', ', 이라니(Foreign)', ', 이다(Foreign)',
-                    ', 이니까(Foreign)', ', 이네(Foreign)', ', 요(Foreign)', ', 야(Foreign)',
-                    ', 라(Foreign)', ', 다(Foreign)', ', 네(Foreign)', ', 이얌(Foreign)',
-                    ', 이니(Foreign)', ', 이라는데(Foreign)', ', 대에(Foreign)', ', 니까(Foreign)',
-                    ', 이넹(Foreign)', ', 이던데(Foreign)', ', 지(Foreign)', ', 에나(Foreign)',
-                    ', 함(Foreign)', ', 이었는데(Foreign)', ', 이거든(Foreign)', ', 이었나(Foreign)',
-                    ', 이에요(Foreign)'
+    missing_Eomi = ['입니다(Foreign)', '임(Foreign)', '인디(Foreign)', '인데(Foreign)',
+                    '인가(Foreign)', '이지(Foreign)', '이요(Foreign)', ',여(Foreign)',
+                    '이야(Foreign)', '이래(Foreign)', '이라니(Foreign)', ', 이다(Foreign)',
+                    '이니까(Foreign)', '이네(Foreign)', '요(Foreign)', '야(Foreign)',
+                    '라(Foreign)', '다(Foreign)', '네(Foreign)', ', 이얌(Foreign)',
+                    '이니(Foreign)', '이라는데(Foreign)', '대에(Foreign)', '니까(Foreign)',
+                    '이넹(Foreign)', '이던데(Foreign)', '지(Foreign)', '에나(Foreign)',
+                    '함(Foreign)', '이었는데(Foreign)', '이거든(Foreign)', '이었나(Foreign)',
+                    '이에요(Foreign)'
                    ]
     
     missing_list = [missing_Adverb, missing_Josa, missing_Verb, missing_Suffix, missing_Noun, missing_Eomi]
@@ -1021,9 +1001,9 @@ def fix_foreign(tokenized):
 
 
 def fix_suffix_Noun(tokenized):
-    missing = [', 오빠(Suffix)', ', 언니(Suffix)', ', 누나(Suffix)', ', 형(Suffix)',
-               ', 엄마(Suffix)', ', 아빠(Suffix)', 
-               ', User(Alpha)', ', UserUser(Alpha)', ', UserUserUser(Alpha)']
+    missing = ['오빠(Suffix)', '언니(Suffix)', '누나(Suffix)', '형(Suffix)',
+               '엄마(Suffix)', '아빠(Suffix)', 
+               'User(Alpha)', 'UserUser(Alpha)', 'UserUserUser(Alpha)']
     
     for i in range(len(missing)):
         if missing[i] in tokenized:
@@ -1052,14 +1032,147 @@ def fix_suffix_Noun2(tokenized):
 
 ```python
 # 해석이 모호하거나 파괴된 토큰 결헙 및 형태소 재분류
+single_words = ['할인가',  '할인가격', '할인금', '할인금액',
+                '펀딩가', '펀딩가격', '펀딩금', '펀딩금액',
+                '예정가', '예정가격',
+                '정상가', '정상가격', 
+                '결제일',
+                '알림신청',
+                '얼리버드',
+                '리워드', 
+                '사은품',
+                '구성품',
+                '수령일',
+                '배송일',
+                '종료일',
+                '택배사',
+                '택배발송',
+                '보증기간',
+                'C타입',
+                '새소식',
+                '고객샌터', '고객센터',
+                '후원금', '후원금액',
+                '모델명',
+                '크라우드',
+                '특허증',
+                '사용법', '사용방법',
+                '제조국',
+                '생산지',
+                '접수처',
+                '콜드브루', '콜드부르',
+                '키보드',
+                '받침대',
+                '맞춤형',
+                '가열식',
+                '일체형',
+                '끝판왕',
+                '전문가용',
+                '숙련자', '숙련자용',
+                '명암비',
+                '풀패키지',
+                '와디즈',
+                '아답터'
+                '서포터즈'
+                '안내',
+                '다들',
+                '도착',
+                '그쵸',
+                '충동구매'
+               ]
+
+destroyed_words = {'할인(Noun)' : ['가', '금'],
+                   '펀딩(Noun)' : ['가', '금'],
+                   '예정(Noun)' : ['가'],
+                   '정상(Noun)' : ['가'],
+                   '결제(Noun)' : ['일'],
+                   '알림(Noun)' : ['신'],
+                   '얼리(Verb)' : ['버'],
+                   '리(Noun)' : ['워'], 
+                   '사은(Noun)': ['품'],
+                   '구(Modifier)' : ['성'],
+                   '수령(Noun)' : ['일'],
+                   '배송(Noun)' : ['일'],
+                   '종료(Noun)' : ['일'],
+                   '택배(Noun)' : ['사', '발'],
+                   '보증(Noun)' : ['기간'],
+                   'C(Alpha)' : ['타'],
+                   '새(Modifier)' : ['소'],
+                   '고객(Noun)' : ['샌', '센'],
+                   '후(Noun)' : ['원'],
+                   '후원(Noun)' : ['금'],
+                   '모델(Noun)' : ['명'],
+                   '크라(Verb)' : ['우'],       
+                   '특허(Noun)' : ['증'],
+                   '사용(Noun)' : ['법', '방'],
+                   '사(Modifier)' : ['용'],
+                   '제(Modifier)' : ['조'],
+                   '생산(Noun)' : ['지'],
+                   '접수(Noun)' : ['처'],
+                   '콜드(Noun)' : ['브', '부'],
+                   '키(Noun)' : ['보'],
+                   '받침(Noun)' : ['대'],
+                   '맞춤(Noun)' : ['형'],
+                   '가열(Noun)' : ['식'],
+                   '일체(Noun)' : ['형'],
+                   '끝판(Noun)' : ['왕'],
+                   '전문(Noun)' : ['가'],
+                   '숙련(Noun)' : ['자'],
+                   '명암(Noun)' : ['비'],
+                   '풀(Noun)' : ['패'],
+                   '와디(Noun)' : ['즈'],
+                   '아(Exclamation)' : ['답'],
+                   '서포터(Noun)' :['즈'],
+                   '안(VerbPrefix)' : ['내'],
+                   '다(Adverb)' : ['들'],
+                   '도(Suffix)' : ['착'],
+                   '그(Noun)' : ['쵸'],
+                   '충동(Noun)' : ['구'],
+                  }
+
+
+
 def restore_pos(tokenized_sentence):
     import re
     import numpy as np
     global re_sentence
     global pos_label
     
-    token_list = tokenized_sentence.split(', ')
+    token_list = tokenized_sentence.split()
+    
+    destroyed_keys = destroyed_words.keys()
+    for dest_front in destroyed_keys:
+        if dest_front in token_list:
+            fw_indexs = np.where(np.array(token_list) == dest_front)[0].tolist()
+            fron_word = dest_front
+            
+            for fw_index in fw_indexs:
+                bw_index = int(fw_index + 1)
+                
+                if bw_index < len(token_list):
+                    back_word = token_list[bw_index]
+                    
+                    dest_back_list = destroyed_words[dest_front]
+                    for dest_back in dest_back_list:
+                        if dest_back == back_word[0]:
+                            
+                            assemble_word = re.sub(pattern = r'\([^)]*\)', repl='', string = str(fron_word + back_word))
 
+                            for s_word in single_words:
+                                if s_word in assemble_word and s_word == assemble_word:
+                                    re_fw = assemble_word + '(Noun)'
+
+                                    token_list[fw_index] = re_fw
+                                    token_list[bw_index] = ''
+
+                                elif s_word in assemble_word and s_word != assemble_word:
+                                    sw_lenght = len(s_word)
+                                    re_fw = assemble_word[:sw_lenght] + '(Noun)'
+                                    re_bw = assemble_word[sw_lenght:] + '(Josa)'
+
+                                    token_list[fw_index] = re_fw
+                                    token_list[bw_index] = re_bw
+    
+    
     for i in range(len(token_list)-1):
         ft_index = i
         bt_index = i+1
@@ -1067,6 +1180,15 @@ def restore_pos(tokenized_sentence):
         f_token = token_list[ft_index]
         b_token = token_list[bt_index]
         
+        if '(Josa)' in f_token and '(Josa)' in b_token:
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+            
+            f_token = assemble_token + '(test)' 
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+            
         if '(Verb)' in f_token and '(Eomi)' in b_token:
             assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
             
@@ -1214,10 +1336,15 @@ tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(fix_suffix_
     ...생략...
 
 ```python
-tokenized_df.to_csv('350만_Tokenized.csv(pos 교정)', index = False)
+tokenized_df.to_csv('카톡대화_Tokenized.csv(pos 교정)', index = False)
 ```
 
-
+```python
+re_dic = occur_countor(tokenized_df)
+re_dic[['word', 'pos']] = Occur_dic['Token'].apply(lambda x: pd.Series(word_pos_split(x)))
+re_dic = re_dic[['Token', 'word', 'pos', 'Token_freq', 'Total_ratio']]
+re_dic.to_csv('카톡대화_pos_dic(pos 교정).csv', index=False)
+```
 
 
 <br><br>
