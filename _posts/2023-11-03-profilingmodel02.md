@@ -715,22 +715,24 @@ https://docs.google.com/spreadsheets/d/1wKv4hAfJD_ToORv1Q7QGWsCjYUQTZKHRzZMNCxVP
 
 
 ```python
+from collections import Counter
+
 def occur_countor(df):
     total_length = len(df)
-    splited_li = split_dataframe(df)
+    splited_li = split_dataframe(df, size=1000)
 
     Occur_dict = {}
-    for splited_df in splited_li: 
+    for splited_df in tqdm(splited_li, total=len(splited_li), desc="딕셔너리 구성"): 
         merge_list = []
-        for index, row in tqdm(splited_df.iterrows(), total=len(splited_df), desc="전체 토큰 병합", mininterval=0.1):
-            token_list = row['tokenized'].split(', ')
+        for index, row in splited_df.iterrows():
+            token_list = row['tokenized'].split()
             for token in token_list:
                 merge_list.append(token)
 
         count_list = Counter(merge_list).most_common()
 
         sort_arry = []
-        for d, c in tqdm(count_list, total=len(count_list), desc="빈도순 정렬", mininterval=0.1):
+        for d, c in count_list:
             for i in range(c):
                 sort_arry.append(d)
 
@@ -772,7 +774,7 @@ pos_dic = pos_dic[['Token', 'word', 'pos', 'Token_freq', 'Total_ratio']]
 pos_dic
 ```
 
-
+    딕셔너리 구성:  100%|████████████████████████████████████████████████████████████████████████████| 3503/3503 [03:24<00:00, 17136.46it/s]
 
 <table border="1" class="dataframe">
   <thead>
