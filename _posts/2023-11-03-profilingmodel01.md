@@ -250,33 +250,28 @@ for file in file_list:     #리스트의 json 파일 선택
 
 ```python
 topic_list = ['개인및관계', '미용과건강', '상거래(쇼핑)', '시사교육', '식음료', '여가생활', '일과직업', '주거와생활', '행사']
-for topic in tqdm(topic_list, total = len(topic_list), desc='병합 진행률'):  
+
+full_df = pd.DataFrame()
+for topic in tqdm(topic_list, total = len(topic_list), desc='병합 진행률'):
     train = pd.read_csv(f'Training_{topic}.csv')
     valid = pd.read_csv(f'Validation_{topic}.csv')
-    
+
     train = train.astype({'contents':'str'})
     train['length'] = train['contents'].apply(lambda x: len(x))
-    
+
     valid = valid.astype({'contents':'str'})
     valid['length'] = valid['contents'].apply(lambda x: len(x))
-    
+
     topic_df = pd.concat([train, valid], axis= 0, ignore_index= True)
     topic_df['topic'] = topic
     topic_df = topic_df[['topic', 'sex', 'age', 'resident', 'contents', 'length']]
-    topic_df.to_csv(f'./{topic}.csv', index=False)
-
-topic_list = ['개인및관계', '미용과건강', '상거래(쇼핑)', '시사교육', '식음료', '여가생활', '일과직업', '주거와생활', '행사']
-
-full_df = pd.DataFrame()
-for topic in tqdm(topic_list, total = len(topic_list), desc='병합 진행률'):  
-    topic_df = pd.read_csv(f'{topic}.csv')
 
     full_df = pd.concat([full_df, topic_df], axis= 0, ignore_index= True)
-    full_df.to_csv('SNS_FULL_Dataset(raw).csv', index=False)
+full_df
 ```
 
     병합 진행률: 100%|███████████████████████████████████████████████████████████████████████| 9/9 [01:35<00:00, 10.61s/it]
-    병합 진행률: 100%|███████████████████████████████████████████████████████████████████████| 9/9 [01:35<00:00, 10.61s/it]
+
     
 
 
