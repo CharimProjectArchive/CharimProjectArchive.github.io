@@ -558,7 +558,7 @@ def pos_tokenizer(sentence):    #POS 기준 토크나이제이션
 
 ```python
 #메모리아웃 되는 것을 방지하기 위해 데이터를 일정 크기 이하로 Split
-def split_dataframe(dataframe, size=1000):
+def split_dataframe(dataframe, size=100000):
     total_length = len(dataframe)
     splited_li = []  # splited_li는 반드시 초기화되어야 합니다.
 
@@ -583,26 +583,30 @@ def split_dataframe(dataframe, size=1000):
 
 
 ```python
-# 데이터가 커서 분리하여 처리
+import gc
+
 df_li = split_dataframe(df, size=1000)
 
 tokenized_df = pd.DataFrame()
+i = 0
 for d in tqdm(df_li, total=len(df_li), desc='토크나이징'):
     data = d.copy()
     data['tokenized'], data['token_count'] = zip(*data['contents'].apply(lambda x: pos_tokenizer(x)))
     tokenized_df = pd.concat([tokenized_df, data], ignore_index=True)
-
+    
+    i += 1
+    if i%500 == 0:
+        gc.collect()
+    
 tokenized_df
 ```
 
-    100%|████████████████████████████████████████████████████████████████████████████████| 600000/600000 [36:11<00:00, 276.37it/s]
-    ...생략...
+    토크나이징: 100%|███████████████████████████████████████████████████████████████████████| 3503/3503 [3:20:39<00:00,  3.44s/it]
 
 
 
 
 
-<div>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -610,6 +614,8 @@ tokenized_df
       <th>sex</th>
       <th>age</th>
       <th>contents</th>
+      <th>length</th>
+      <th>word_bunch</th>
       <th>tokenized</th>
       <th>token_count</th>
     </tr>
@@ -620,7 +626,9 @@ tokenized_df
       <td>여성</td>
       <td>20대</td>
       <td>나지금밥머거2시간걸어서 번화가찾았어..ㅜㅜ 잉ㅜㅜ ㅎㅎㅎㅎ오좋겠네 ㅋㄱㅋㄱㄱㄱㄱ아니...</td>
-      <td>나(Noun), 지금(Noun), 밥(Noun), 머거(Verb), 2시간(Numb...</td>
+      <td>127</td>
+      <td>16</td>
+      <td>나(Noun) 지금(Noun) 밥(Noun) 머거(Verb) 2시간(Number) ...</td>
       <td>54</td>
     </tr>
     <tr>
@@ -628,7 +636,9 @@ tokenized_df
       <td>남성</td>
       <td>20대</td>
       <td>헐 ㅠㅠ 언넝호텔들가ㅠㅠ 엄청피건할첸데 나는인낫러요 나 두시출근이다ㅎㅎㅎㅎ 퀵으로한...</td>
-      <td>헐(Verb), ㅠㅠ(KoreanParticle), 언(Modifier), 넝(No...</td>
+      <td>130</td>
+      <td>18</td>
+      <td>헐(Verb) ㅠㅠ(KoreanParticle) 언(Modifier) 넝(Noun)...</td>
       <td>49</td>
     </tr>
     <tr>
@@ -636,7 +646,9 @@ tokenized_df
       <td>여성</td>
       <td>20대</td>
       <td>학생이면좋구! 왜혼자다니냐고오..... 와 내친군학교나감 ㅋㅋㅋㅋㅋ 그르네 막졸업한...</td>
-      <td>학생(Noun), 이(Suffix), 면(Josa), 좋구(Adjective), !...</td>
+      <td>56</td>
+      <td>7</td>
+      <td>학생(Noun) 이(Suffix) 면(Josa) 좋구(Adjective) !(Pun...</td>
       <td>25</td>
     </tr>
     <tr>
@@ -644,7 +656,9 @@ tokenized_df
       <td>남성</td>
       <td>20대</td>
       <td>훔 학생 없는데...주변에... 아니 복학하고 학교를 못가는데 어케 친구가있냐.. ...</td>
-      <td>훔(Noun), 학생(Noun), 없는데(Adjective), ...(Punctua...</td>
+      <td>74</td>
+      <td>15</td>
+      <td>훔(Noun) 학생(Noun) 없는데(Adjective) ...(Punctuatio...</td>
       <td>31</td>
     </tr>
     <tr>
@@ -652,7 +666,9 @@ tokenized_df
       <td>여성</td>
       <td>30대</td>
       <td>참나 내가뭐얼마나그랬다고 웃기는사람이야지짜 너무화난당.. 근데오빠는말을또 잘해서 내...</td>
-      <td>참나(Noun), 내(Noun), 가(Josa), 뭐(Noun), 얼마나(Noun)...</td>
+      <td>146</td>
+      <td>19</td>
+      <td>참나(Noun) 내(Noun) 가(Josa) 뭐(Noun) 얼마나(Noun) 그랬다...</td>
       <td>63</td>
     </tr>
     <tr>
@@ -664,24 +680,10 @@ tokenized_df
       <td>...</td>
       <td>...</td>
       <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
     </tr>
   </tbody>
 </table>
-<p>3502912 rows × 20 columns</p>
-</div>
+<p>3502903 rows × 7 columns</p>
 
 
 
@@ -794,23 +796,23 @@ pos_dic
       <td>?</td>
       <td>Punctuation</td>
       <td>1865214</td>
-      <td>0.532475</td>
+      <td>0.532477</td>
     </tr>
     <tr>
       <th>1</th>
       <td>ㅋㅋㅋㅋㅋ(KoreanParticle)</td>
       <td>ㅋㅋㅋㅋㅋ</td>
       <td>KoreanParticle</td>
-      <td>1526323</td>
-      <td>0.435730</td>
+      <td>1454297</td>
+      <td>0.415169</td>
     </tr>
     <tr>
       <th>2</th>
       <td>에(Josa)</td>
       <td>에</td>
       <td>Josa</td>
-      <td>1307922</td>
-      <td>0.373381</td>
+      <td>1307936</td>
+      <td>0.373386</td>
     </tr>
     <tr>
       <th>3</th>
@@ -818,7 +820,7 @@ pos_dic
       <td>가</td>
       <td>Josa</td>
       <td>1142959</td>
-      <td>0.326288</td>
+      <td>0.326289</td>
     </tr>
     <tr>
       <th>4</th>
@@ -836,49 +838,9 @@ pos_dic
       <td>...</td>
       <td>...</td>
     </tr>
-    <tr>
-      <th>18142</th>
-      <td>오는구나(Verb)</td>
-      <td>오는구나</td>
-      <td>Verb</td>
-      <td>351</td>
-      <td>0.000100</td>
-    </tr>
-    <tr>
-      <th>18143</th>
-      <td>the(Alpha)</td>
-      <td>the</td>
-      <td>Alpha</td>
-      <td>351</td>
-      <td>0.000100</td>
-    </tr>
-    <tr>
-      <th>18144</th>
-      <td>문상(Noun)</td>
-      <td>문상</td>
-      <td>Noun</td>
-      <td>351</td>
-      <td>0.000100</td>
-    </tr>
-    <tr>
-      <th>18145</th>
-      <td>앚(Noun)</td>
-      <td>앚</td>
-      <td>Noun</td>
-      <td>351</td>
-      <td>0.000100</td>
-    </tr>
-    <tr>
-      <th>18146</th>
-      <td>센트럴(Noun)</td>
-      <td>센트럴</td>
-      <td>Noun</td>
-      <td>351</td>
-      <td>0.000100</td>
-    </tr>
   </tbody>
 </table>
-<p>18147 rows × 5 columns</p>
+<p>18194 rows × 5 columns</p>
 
 
 
@@ -996,7 +958,7 @@ def fix_suffix_Noun(tokenized):
 
 
 def fix_suffix_Noun2(tokenized):
-    missing = [', 님(Suffix)', ', 분들(Suffix)']   
+    missing = ['님(Suffix)', '분들(Suffix)']   
     for i in range(len(missing)):
         if missing[i] in tokenized:
             fixed_pos = missing[i].replace('(Suffix)', '(Noun)')
@@ -1295,7 +1257,7 @@ def restore_pos(tokenized_sentence):
         del token_list[ws]
         w += 1
     
-    re_sentence = ', '.join(token_list)
+    re_sentence = ' '.join(token_list)
 
     return(re_sentence)
 ```
@@ -1305,12 +1267,95 @@ def restore_pos(tokenized_sentence):
 tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(fix_foreign)
 tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(fix_suffix_Noun)
 tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(restore_pos)
-tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(restore_pos)
 tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(fix_suffix_Noun2)
+tokenized_df
 ```
 
     100%|████████████████████████████████████████████████████████████████████████████| 3502912/3502912 [03:24<00:00, 17136.46it/s]
     ...생략...
+
+
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>sex</th>
+      <th>age</th>
+      <th>contents</th>
+      <th>length</th>
+      <th>word_bunch</th>
+      <th>tokenized</th>
+      <th>token_count</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>여성</td>
+      <td>20대</td>
+      <td>나지금밥머거2시간걸어서 번화가찾았어..ㅜㅜ 잉ㅜㅜ ㅎㅎㅎㅎ오좋겠네 ㅋㄱㅋㄱㄱㄱㄱ아니...</td>
+      <td>127</td>
+      <td>16</td>
+      <td>나(Noun) 지금(Noun) 밥(Noun) 머거(Verb) 2시간(Number) ...</td>
+      <td>54</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>남성</td>
+      <td>20대</td>
+      <td>헐 ㅠㅠ 언넝호텔들가ㅠㅠ 엄청피건할첸데 나는인낫러요 나 두시출근이다ㅎㅎㅎㅎ 퀵으로한...</td>
+      <td>130</td>
+      <td>18</td>
+      <td>헐(Verb) ㅠㅠ(KoreanParticle) 언넝(Noun) 호텔들(Noun) ...</td>
+      <td>49</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>여성</td>
+      <td>20대</td>
+      <td>학생이면좋구! 왜혼자다니냐고오..... 와 내친군학교나감 ㅋㅋㅋㅋㅋ 그르네 막졸업한...</td>
+      <td>56</td>
+      <td>7</td>
+      <td>학생이(Noun) 면(Josa) 좋구(Adjective) !(Punctuation)...</td>
+      <td>25</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>남성</td>
+      <td>20대</td>
+      <td>훔 학생 없는데...주변에... 아니 복학하고 학교를 못가는데 어케 친구가있냐.. ...</td>
+      <td>74</td>
+      <td>15</td>
+      <td>훔(Noun) 학생(Noun) 없는데(Adjective) ...(Punctuatio...</td>
+      <td>31</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>여성</td>
+      <td>30대</td>
+      <td>참나 내가뭐얼마나그랬다고 웃기는사람이야지짜 너무화난당.. 근데오빠는말을또 잘해서 내...</td>
+      <td>146</td>
+      <td>19</td>
+      <td>참나(Noun) 내(Noun) 가(Josa) 뭐(Noun) 얼마나(Noun) 그랬다...</td>
+      <td>63</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+  </tbody>
+</table>
+<p>3502903 rows × 7 columns</p>
+
+
+
 
 ```python
 tokenized_df.to_csv('카톡대화_Tokenized.csv(pos 교정)', index = False)
@@ -1328,7 +1373,7 @@ tokenized_df.to_csv('카톡대화_Tokenized.csv(pos 교정)', index = False)
 
 ```python
 re_dic = occur_countor(tokenized_df)
-re_dic['word'], re_dic['pos'] = zip(*Occur_dic['Token'].apply(lambda x: word_pos_split(x)))
+re_dic['word'], re_dic['pos'] = zip(*re_dic['Token'].apply(lambda x: word_pos_split(x)))
 re_dic = re_dic[['Token', 'word', 'pos', 'Token_freq', 'Total_ratio']]
 re_dic.to_csv('카톡대화_pos_dic(pos 교정).csv', index=False)
 ```
