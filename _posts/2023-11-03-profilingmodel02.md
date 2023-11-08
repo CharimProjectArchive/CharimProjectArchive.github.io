@@ -558,7 +558,7 @@ def pos_tokenizer(sentence):    #POS 기준 토크나이제이션
 
 ```python
 #메모리아웃 되는 것을 방지하기 위해 데이터를 일정 크기 이하로 Split
-def split_dataframe(dataframe, size=100000):
+def split_dataframe(dataframe, size=1000):
     total_length = len(dataframe)
     splited_li = []  # splited_li는 반드시 초기화되어야 합니다.
 
