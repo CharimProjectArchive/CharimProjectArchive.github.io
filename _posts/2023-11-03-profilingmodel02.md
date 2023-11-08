@@ -1810,7 +1810,7 @@ relative_dic
 
 
 ```python
-relative_dic.to_csv('카톡대_feature_dic.csv', index=False)
+relative_dic.to_csv('카톡대화_feature_dic.csv', index=False)
 ```
 
 
