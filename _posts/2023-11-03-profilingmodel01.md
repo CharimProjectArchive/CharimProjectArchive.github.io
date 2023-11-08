@@ -267,23 +267,13 @@ for topic in tqdm(topic_list, total = len(topic_list), desc='병합 진행률'):
     topic_df = topic_df[['topic', 'sex', 'age', 'resident', 'contents', 'length']]
 
     full_df = pd.concat([full_df, topic_df], axis= 0, ignore_index= True)
-full_df
-```
 
-    병합 진행률: 100%|███████████████████████████████████████████████████████████████████████| 9/9 [01:35<00:00, 10.61s/it]
-
-    
-
-
-
-```python
 full_df = full_df.drop_duplicates(['sex', 'age', 'contents']) # 중복된 데이터 제거
 full_df = full_df.dropna()
 full_df
 ```
 
-
-
+    병합 진행률: 100%|███████████████████████████████████████████████████████████████████████| 9/9 [01:35<00:00, 10.61s/it]
 
 <div>
 <table border="1" class="dataframe">
@@ -402,6 +392,17 @@ full_df
 </table>
 <p>3835493 rows × 6 columns</p>
 </div>
+
+
+
+```python
+full_df.to_csv('카톡대화_Dataset(raw).csv', index=False)
+```
+
+
+
+
+
 <br><br>
 
 ## 기초 탐색
@@ -420,10 +421,10 @@ plt.figure(figsize=(5,3))
 plt.rc('font', size=20)
 
 print('평균', full_df['length'].mean())
-print('상위5%', full_df['length'].quantile(0.05))
-print('하위5%', full_df['length'].quantile(0.95))
+print('상위1%', full_df['length'].quantile(0.05))
+print('하위1%', full_df['length'].quantile(0.95))
 
-sns.histplot(full_df['length'])
+sns.distplot(full_df['length'])
 plt.show()
 ```
 
@@ -441,8 +442,7 @@ plt.show()
 
 
 ```python
-length_df = full_df.loc[full_df['length'] >=20] 
-length_df = length_df.loc[length_df['length'] <=200] 
+full_df = full_df.loc[(full_df['length'] >=20) & (full_df['length'] <=200)]
 ```
 
 
@@ -450,7 +450,7 @@ length_df = length_df.loc[length_df['length'] <=200]
 
 ```python
 # feature는 다르지만 동일한한 메시지 확인
-dup_df = length_df[length_df['contents'].duplicated(keep=False)].sort_values('contents')
+dup_df = full_df[full_df['contents'].duplicated(keep=False)].sort_values('contents')
 dup_df
 ```
 
@@ -580,6 +580,7 @@ dup_df
 
 ```python
 dup_df.to_excel('중복 메세지 유형 확인.xlsx', index=False)
+full_df.to_csv('카톡대화_Dataset(raw_중복된 메시지 제거).csv', index=False)
 ```
 
     
@@ -587,18 +588,18 @@ dup_df.to_excel('중복 메세지 유형 확인.xlsx', index=False)
 
 ```python
 # feature 별 분포 확인
-m_df = df.loc[df['sex'] == '남성']
-f_df = df.loc[df['sex'] == '여성']
+m_df = full_df.loc[full_df['sex'] == '남성']
+f_df = full_df.loc[full_df['sex'] == '여성']
 
-a10_df = df.loc[df['age'] == '20대 미만']
-a20_df = df.loc[df['age'] == '20대']
-a30_df = df.loc[df['age'] == '30대']
-a40_df = df.loc[df['age'] == '40대']
-a50_df = df.loc[df['age'] == '50대']
-a60_df = df.loc[df['age'] == '60대']
-a70_df = df.loc[df['age'] == '70대 이상']
+a10_df = full_df.loc[full_df['age'] == '20대 미만']
+a20_df = full_df.loc[full_df['age'] == '20대']
+a30_df = full_df.loc[full_df['age'] == '30대']
+a40_df = full_df.loc[full_df['age'] == '40대']
+a50_df = full_df.loc[full_df['age'] == '50대']
+a60_df = full_df.loc[full_df['age'] == '60대']
+a70_df = full_df.loc[full_df['age'] == '70대 이상']
 
-values = [len(df), len(m_df), len(f_df), len(a10_df), len(a20_df), len(a30_df), len(a40_df), len(a50_df), len(a60_df), len(a70_df)]
+values = [len(full_df), len(m_df), len(f_df), len(a10_df), len(a20_df), len(a30_df), len(a40_df), len(a50_df), len(a60_df), len(a70_df)]
 labels = ['total', 'male', 'female', 'age10', 'age20', 'age30', 'age40', 'age50', 'age60', 'age70']
 
 plt.figure(figsize = (20, 10))
@@ -634,7 +635,7 @@ topic_list = ['개인및관계', '미용과건강', '상거래(쇼핑)', '시사
 
 rows = []
 for topic in tqdm(topic_list, total = len(topic_list)):  
-    df_t = df.loc[df['topic'] == f'{topic}']
+    df_t = full_df.loc[full_df['topic'] == f'{topic}']
     file = topic
     total = len(df_t)
     length99 = st.t.interval(0.99, len(df_t['length'])-1, loc=np.mean(df_t['length']), scale=st.sem(df_t['length']))[1]
@@ -930,15 +931,6 @@ plt.show()
 
 
 
-
-
-
-
-
-
-```python
-raw_df.to_csv('SNS_FULL_Dataset(raw_중복된 메세지 제거).csv', index=False)
-```
 
 
 
