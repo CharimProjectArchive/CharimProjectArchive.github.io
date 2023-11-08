@@ -1451,7 +1451,7 @@ def feature_extractor(data, dic , col, features):
 
 ```python
 gender_class = ['남성', '여성']
-gender_dic = feature_extractor(df, re_dic, 'sex', gender_class)
+gender_dic = feature_extractor(tokenized_df, re_dic, 'sex', gender_class)
 ```
 
     남성: 100%|██████████████████████████████████████████████████████████████████████| 26/26 [00:13<00:00, 1.99it/s]
@@ -1462,7 +1462,7 @@ gender_dic = feature_extractor(df, re_dic, 'sex', gender_class)
 
 ```python
 age_class = ['20대 미만', '20대', '30대', '40대', '50대', '60대', '70대 이상'] #
-age_dic = feature_extractor(df, re_dic, 'age', age_class)
+age_dic = feature_extractor(tokenized_df, re_dic, 'age', age_class)
 ```
 
     20대 미만: 100%|█████████████████████████████████████████████████████████████████| 102/102 [11:40<00:00, 1.98it/s]
@@ -1507,7 +1507,7 @@ other_dic['Bias_ratio_other70'] = (age_dic['Bias_20대 미만'] + age_dic['Bias_
 
 
 ```python
-relative_dic = Occur_dic[['Token', 'Token_freq', 'Total_ratio']].copy()
+relative_dic = re_dic[['Token', 'Token_freq', 'Total_ratio']].copy()
 
 #성별에 대한 
 relative_dic['Gender_Freq'] = np.log(gender_dic['Freq_ratio_남성']/gender_dic['Freq_ratio_여성']) # 성별 상대 빈출도
