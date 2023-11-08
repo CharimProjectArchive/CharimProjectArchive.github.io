@@ -584,13 +584,14 @@ def split_dataframe(dataframe, size=100000):
 
 ```python
 # 데이터가 커서 분리하여 처리
-df_li = split_dataframe(processed_df, size=1000)
+df_li = split_dataframe(df, size=1000)
 
-tokenized_df = processed_df[['sex, age, contents']].copy()
-for d in tqdm(df_li, total=len(df_li), desc='토크나이징', mininterval=0.5):
-    d['tokenized'], d['token_count'] = zip(*d['contents'].apply(lambda x: pos_tokenizer(x)))
-    
-tokenized_df = pd.concat(df_li, ignore_index=True)
+tokenized_df = pd.DataFrame()
+for d in tqdm(df_li, total=len(df_li), desc='토크나이징'):
+    data = d.copy()
+    data['tokenized'], data['token_count'] = zip(*data['contents'].apply(lambda x: pos_tokenizer(x)))
+    tokenized_df = pd.concat([tokenized_df, data], ignore_index=True)
+
 tokenized_df
 ```
 
