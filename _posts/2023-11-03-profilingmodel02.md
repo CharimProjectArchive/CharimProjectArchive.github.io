@@ -1535,8 +1535,6 @@ relative_dic['A60_Bias'] = np.log(age_dic['Bias_ratio_60대']/other_dic['Bias_ra
 
 relative_dic['A70_Freq'] = np.log(age_dic['Freq_ratio_70대 이상']/other_dic['Freq_ratio_other70']) 
 relative_dic['A70_Bias'] = np.log(age_dic['Bias_ratio_70대 이상']/other_dic['Bias_ratio_other70'])
-
-relative_dic
 ```
 
 
