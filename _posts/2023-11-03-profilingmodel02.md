@@ -222,7 +222,7 @@ df = df.fillna(0)
 df
 ```
 
-    100%|████████████████████████████████████████████████████████████████████████████| 3564042/3564042 [04:53<00:00, 12152.45it/s]
+    100%|████████████████████████████████████████████████████████████████████████████| 3563533/3563533 [04:53<00:00, 12152.45it/s]
     ...생략...
 
 
@@ -417,6 +417,23 @@ print('- duplicated data: {:,}'.format(deleted_null - deleted_dup))
     - raw data: 3,564,042
     - null data: 0
     - duplicated data: 0
+
+
+<br><br>
+### 자모 표현, 숫자, 기호가 결합된 표현 유형별 분리(띄어쓰기)
+
+```python
+def split_re_types(sentence):
+    KoreanParticle_pattern = r'[ㄱ-ㅎㅏ-ㅣ]+'
+    Symbol_pattern = r'[^ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z0-9\s]+'
+    Number_pattern = r'(\d+)'
+    
+    sentence = re.sub(KoreanParticle_pattern, r' \g<0> ', sentence)
+    sentence = re.sub(Symbol_pattern, r' \g<0> ', sentence)
+    sentence = re.sub(Number_pattern, r' \g<0> ', sentence)
+    
+    return sentence
+```
     
 <br><br>
 ### 주요 이모지 및 특수표현 표제화
@@ -458,44 +475,41 @@ text_sentence
 
 
 
-```python
-processed_df['contents'] = processed_df['contents'].progress_apply(specific_lemmatization)
-```
-
-    100%|████████████████████████████████████████████████████████████████████████████| 3564042/3564042 [05:13<00:00, 11354.18it/s]
-
     
 <br><br>
-### 반복되는 동일 음절 표제화 처리
+### 반복되는 동일 철자 표제화 처리
 
 
 ```python
-def duplicated_spelling_reduction(sentence):
+def duplicated_character_reduction(sentence):
     words = sentence.split()
 
     for word in words:
-        pattern = re.compile(r'(\w)\1{4,}')
+        pattern = re.compile(r'([^0-9])\1{4,}')
         re_word = pattern.sub(r'\1' * 5, word)
         sentence = sentence.replace(word, re_word)
     return sentence
 
-text_sentence = '    안녕안녕 헤헤헤헤헤헤 ㅋㅋㅋㅋ ㅎㅎㅎㅎㅎㅎㅎㅎ ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ'
-duplicated_spelling_reduction(text_sentence)
+text_sentence = '      ^^^^^^^ !!!!!!! 안녕안녕 헤헤헤헤헤헤헤헤 ㅋㅋㅋㅋ ㅎㅎㅎㅎㅎㅎㅎㅎ ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ'
+duplicated_character_reduction(text_sentence)
 ```
 
 
 
 
-    ' 안녕안녕 헤헤헤 ㅋㅋㅋㅋ ㅎㅎㅎㅎㅎ ㅋㅋㅋㅋㅋ'
+    '      ^^^^^ !!!!! 안녕안녕 헤헤헤헤헤 ㅋㅋㅋㅋ ㅎㅎㅎㅎㅎ ㅋㅋㅋㅋㅋ'
 
 
 
 
 ```python
-processed_df['contents'] = processed_df['contents'].progress_apply(duplicated_spelling_reduction)
+processed_df['contents'] = processed_df['contents'].progress_apply(split_re_types)
+processed_df['contents'] = processed_df['contents'].progress_apply(specific_lemmatization)
+processed_df['contents'] = processed_df['contents'].progress_apply(duplicated_character_reduction)
 ```
 
-    100%|████████████████████████████████████████████████████████████████████████████| 3564042/3564042 [02:02<00:00, 29125.25it/s]
+    100%|████████████████████████████████████████████████████████████████████████████| 3563533/3563533 [02:02<00:00, 29125.25it/s]
+    ...생략...
     
 <br><br>
 ### 연속된 띄어쓰기 처리/5어절 미만 문장 제거
@@ -524,8 +538,8 @@ print("- total processed data: {:,}".format(deleted_cutoff))
 ```
 
     - white space data: 0(0.0%)
-    - cutoff data: 61,139(1.72%)
-    - total processed data: 3,502,903
+    - cutoff data: 9,073(0.25%)
+    - total processed data: 3,554,460
 
 
 ```python
@@ -536,29 +550,14 @@ processed_df.to_csv('카톡대화_Dataset(전처리).csv', index=False)
 <br><br>
 ### 토크나이즈
 - konlpy 라이브러리의 Okt를 사용하여 형태소 분리
+- 띄어쓰기를 유지하기 위해 '_(_)'로 대신
 - 동일 철자이나 다른 형태소를 갖는 토큰을 파악하기 위해 '토큰(형태소)' 형식으로 토크나이즈
 
 ```python
-def pos_tokenizer(sentence):    #POS 기준 토크나이제이션
-    import konlpy
-    okt = konlpy.tag.Okt() 
-    pos_list = okt.pos(str(sentence)) #토큰/형태소 튜플처리
+import konlpy
 
-    token_arry = []
-    for t, m in pos_list:
-        token = '{}({})'.format(t, m)
-        token_arry.append(token)
-    
-    token_count = len(token_arry)
-    tokenized_sentence = ' '.join(token_arry)
-    return tokenized_sentence, token_count
-```
-
-
-
-```python
 #메모리아웃 되는 것을 방지하기 위해 데이터를 일정 크기 이하로 Split
-def split_dataframe(dataframe, size=100000):
+def split_dataframe(dataframe, size=1000):
     total_length = len(dataframe)
     splited_li = []  # splited_li는 반드시 초기화되어야 합니다.
 
@@ -579,14 +578,32 @@ def split_dataframe(dataframe, size=100000):
     else:
         splited_li.append(dataframe)
     return splited_li
+
+
+def pos_tokenizer(sentence):    #POS 기준 토크나이제이션
+    tokens = sentence.split()
+    with_space = ' SP '.join(tokens)
+    
+    token_li = []
+    okt = konlpy.tag.Okt() 
+    pos_list = okt.pos(str(with_space)) #토큰/형태소 튜플처리
+    for t, m in pos_list:
+        token = '{}({})'.format(t, m)
+        token_li.append(token)
+    
+    token_count = len(token_li)
+    tokenized_sentence = ' '.join(token_li)
+    tokenized_sentence = tokenized_sentence.replace('SP(Alpha)', '_(_)')
+    return tokenized_sentence, token_count
 ```
+
+
 
 
 ```python
 import gc
 
-df_li = split_dataframe(df, size=1000)
-
+df_li = split_dataframe(df, size=1000) # 데이터가 커서 분리하여 처리
 tokenized_df = pd.DataFrame()
 i = 0
 for d in tqdm(df_li, total=len(df_li), desc='토크나이징'):
@@ -601,7 +618,7 @@ for d in tqdm(df_li, total=len(df_li), desc='토크나이징'):
 tokenized_df
 ```
 
-    토크나이징: 100%|███████████████████████████████████████████████████████████████████████| 3503/3503 [3:20:39<00:00,  3.44s/it]
+    토크나이징: 100%|███████████████████████████████████████████████████████████████████████| 3555/3555 [3:20:39<00:00,  3.44s/it]
 
 
 
@@ -683,7 +700,7 @@ tokenized_df
     </tr>
   </tbody>
 </table>
-<p>3502903 rows × 7 columns</p>
+<p>3554460 rows × 7 columns</p>
 
 
 
@@ -701,6 +718,9 @@ tokenized_df.to_csv('카톡대화_Tokenized(pos 비교정).csv', index = False)
 https://docs.google.com/spreadsheets/d/1wKv4hAfJD_ToORv1Q7QGWsCjYUQTZKHRzZMNCxVPvZ4/edit?usp=sharing
 
 **스크리닝 결과**
+- 띄어쓰기 기준으로 토크나이즈된 딕셔너리, 형태소 기준으로 토크나이즈된 딕셔너리, 원 문장, 토크나이즈 문장을 비교
+
+  
 - Okt 딕셔너리에 포함되지 않은 표현이 파괴됨<br>
   ⇒ 두드러지는 표현 교정(분리된 토큰 결합)
 
@@ -719,46 +739,66 @@ https://docs.google.com/spreadsheets/d/1wKv4hAfJD_ToORv1Q7QGWsCjYUQTZKHRzZMNCxVP
 ```python
 from collections import Counter
 
-def occur_countor(df):
+# 띄어쓰기 기준의 토크나이저
+def space_token_countor(df):
     total_length = len(df)
     splited_li = split_dataframe(df, size=1000)
 
-    Occur_dict = {}
-    for splited_df in tqdm(splited_li, total=len(splited_li), desc="딕셔너리 구성"): 
+    space_dict = {}
+    for splited_df in tqdm(splited_li, total=len(splited_li), desc="어절 사전 생성"): 
+        merge_list = []
+        for index, row in splited_df.iterrows():
+            sentence = row['contents'].split()
+            for token in sentence:
+                merge_list.append(token)
+
+        unique_dic = Counter(merge_list)
+        for key, value in unique_dic.items():
+            if key in space_dict:
+                space_dict[key] += value
+            else:
+                space_dict[key] = value
+
+    token_li = space_dict.keys()
+    freq_li = space_dict.values()
+
+    space_dic = pd.DataFrame({'Token': token_li, 'Token_freq': freq_li})
+    space_dic = space_dic.sort_values(by=['Token_freq'], ascending=False).reset_index(drop=True) 
+    space_dic['Total_ratio'] = space_dic['Token_freq'].apply(lambda x: x/total_length)
+    space_dic = space_dic.loc[space_dic['Token_freq'] >= 300]
+    return space_dic
+
+
+# 형태소 기준의 토크나이저
+def pos_token_countor(df):
+    total_length = len(df)
+    splited_li = split_dataframe(df, size=1000)
+
+    occur_dict = {}
+    for splited_df in tqdm(splited_li, total=len(splited_li), desc="형태소 사전 생성"): 
         merge_list = []
         for index, row in splited_df.iterrows():
             token_list = row['tokenized'].split()
             for token in token_list:
                 merge_list.append(token)
 
-        count_list = Counter(merge_list).most_common()
-
-        sort_arry = []
-        for d, c in count_list:
-            for i in range(c):
-                sort_arry.append(d)
-
-        unique_dic = Counter(sort_arry)
-        unique_token = list(unique_dic.keys())
-        unique_freq = list(unique_dic.values())
+        unique_dic = Counter(merge_list)
         
-        for key, value in zip(unique_token, unique_freq):  # zip을 사용하여 두 리스트를 동시에 순회
-            if key in Occur_dict:
-                Occur_dict[key] += value
+        for key, value in unique_dic.items():
+            if key in occur_dict:
+                occur_dict[key] += value
             else:
-                Occur_dict[key] = value
+                occur_dict[key] = value
 
-    token_li = Occur_dict.keys()
-    freq_li = Occur_dict.values()
+    token_li = occur_dict.keys()
+    freq_li = occur_dict.values()
 
-    Occur_dic = pd.DataFrame({'Token': token_li, 'Token_freq': freq_li})
-    Occur_dic = Occur_dic.sort_values(by=['Token_freq'], ascending=False).reset_index(drop=True) 
-    Occur_dic['Total_ratio'] = Occur_dic['Token_freq'].apply(lambda x: x/total_length)
-    Occur_dic = Occur_dic.loc[Occur_dic['Total_ratio'] >= 0.0001]
-    return Occur_dic
-```
+    occur_dic = pd.DataFrame({'Token': token_li, 'Token_freq': freq_li})
+    occur_dic = occur_dic.sort_values(by=['Token_freq'], ascending=False).reset_index(drop=True) 
+    occur_dic['Total_ratio'] = occur_dic['Token_freq'].apply(lambda x: x/total_length)
+    occur_dic = occur_dic.loc[occur_dic['Total_ratio'] >= 0.0001]
+    return occur_dic
 
-```python
 def word_pos_split(token):
     index_li = []
     for i, char in enumerate(token):
@@ -767,10 +807,14 @@ def word_pos_split(token):
     return token[:index_li[-1]], token[index_li[-1]+1:-1]
 ```
 
+```python
+space_dic = space_token_countor(df)
+space_dic
+```
 
 
 ```python
-pos_dic = occur_countor(tokenized_df)
+pos_dic = pos_token_countor(tokenized_df)
 pos_dic['word'], pos_dic['pos'] = zip(*pos_dic['Token'].apply(lambda x: word_pos_split(x)))
 pos_dic = pos_dic[['Token', 'word', 'pos', 'Token_freq', 'Total_ratio']]
 pos_dic
@@ -941,30 +985,14 @@ def fix_foreign(tokenized):
 
 def fix_suffix_Noun(tokenized):
     missing = ['오빠(Suffix)', '언니(Suffix)', '누나(Suffix)', '형(Suffix)',
-               '엄마(Suffix)', '아빠(Suffix)', 
+               '엄마(Suffix)', '아빠(Suffix)', '님(Suffix)', '분들(Suffix)',
                'User(Alpha)', 'UserUser(Alpha)', 'UserUserUser(Alpha)']
     
     for i in range(len(missing)):
         if missing[i] in tokenized:
-            fixed_pos = missing[i].replace('(Suffix)', '(Noun)')
+            fixed_pos = missing[i].replace('(Suffix)', '(Noun)').replace('(Alpha)', '(Noun)')
             tokenized = tokenized.replace(missing[i], fixed_pos)
-        elif missing[i] in tokenized:
-            fixed_pos = missing[i].replace('(Alpha)', '(Noun)')
-            tokenized = tokenized.replace(missing[i], fixed_pos)
-            
-        else:
-            pass
-    return(tokenized)
 
-
-def fix_suffix_Noun2(tokenized):
-    missing = ['님(Suffix)', '분들(Suffix)']   
-    for i in range(len(missing)):
-        if missing[i] in tokenized:
-            fixed_pos = missing[i].replace('(Suffix)', '(Noun)')
-            tokenized = tokenized.replace(missing[i], fixed_pos)
-        else:
-            pass
     return(tokenized)
 ```
 
@@ -1012,7 +1040,7 @@ single_words = ['할인가',  '할인가격', '할인금', '할인금액',
                 '와디즈',
                 '아답터'
                 '서포터즈'
-                '안내',
+                '안내', '안내문'
                 '다들',
                 '도착',
                 '그쵸',
@@ -1062,15 +1090,17 @@ destroyed_words = {'할인(Noun)' : ['가', '금'],
                    '아(Exclamation)' : ['답'],
                    '서포터(Noun)' :['즈'],
                    '안(VerbPrefix)' : ['내'],
+                   '안내(VerbPrefix)' : ['문'],
                    '다(Adverb)' : ['들'],
                    '도(Suffix)' : ['착'],
                    '그(Noun)' : ['쵸'],
                    '충동(Noun)' : ['구'],
+                   '들(Suffix)' : ['가']
                   }
 
 
 
-def restore_pos(tokenized_sentence):
+def restore_word(tokenized_sentence):
     import re
     import numpy as np
     global re_sentence
@@ -1110,146 +1140,7 @@ def restore_pos(tokenized_sentence):
 
                                     token_list[fw_index] = re_fw
                                     token_list[bw_index] = re_bw
-    
-    
-    for i in range(len(token_list)-1):
-        ft_index = i
-        bt_index = i+1
-        
-        f_token = token_list[ft_index]
-        b_token = token_list[bt_index]
-        
-        if '(Josa)' in f_token and '(Josa)' in b_token:
-            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
-            
-            f_token = assemble_token + '(test)' 
-            b_token = ''
-
-            token_list[ft_index] = f_token
-            token_list[bt_index] = b_token
-            
-        if '(Verb)' in f_token and '(Eomi)' in b_token:
-            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
-            
-            f_token = assemble_token + '(Verb)' 
-            b_token = ''
-
-            token_list[ft_index] = f_token
-            token_list[bt_index] = b_token
-        
-        if '(Adjective)' in f_token and '(Eomi)' in b_token:
-            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
-            
-            f_token = assemble_token + '(Adjective)'
-            b_token = ''
-
-            token_list[ft_index] = f_token
-            token_list[bt_index] = b_token
-        
-        
-        if '(VerbPrefix)' in f_token and '(VerbPrefix)' in b_token:
-            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
-            
-            f_token = assemble_token + '(Noun)'
-            b_token = ''
-
-            token_list[ft_index] = f_token
-            token_list[bt_index] = b_token
-    
-    
-        if '(VerbPrefix)' in f_token and '(Verb)' in b_token:
-            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
-            
-            f_token = assemble_token + '(Verb)'
-            b_token = ''
-
-            token_list[ft_index] = f_token
-            token_list[bt_index] = b_token
-        
-        if '(VerbPrefix)' in f_token and '(Adjective)' in b_token:
-            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
-            
-            f_token = assemble_token + '(Adjective)'
-            b_token = ''
-
-            token_list[ft_index] = f_token
-            token_list[bt_index] = b_token
-        
-        
-        if '(Verb)' in f_token and '(VerbPrefix)' in b_token :
-            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
-            
-            f_token = assemble_token + '(Noun)'
-            b_token = ''
-
-            token_list[ft_index] = f_token
-            token_list[bt_index] = b_token
-            
-        
-        if '하(Suffix)' in f_token and '(Josa)' in b_token:
-            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
-            f_token = assemble_token + '(Verb)'
-            b_token = ''
-
-            token_list[ft_index] = f_token
-            token_list[bt_index] = b_token 
-        
-        
-        if '(Noun)' in f_token and '(Suffix)' in b_token:
-            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
-            f_token = assemble_token + '(Noun)'
-            b_token = ''
-
-            token_list[ft_index] = f_token
-            token_list[bt_index] = b_token
-            
-        if '(Adjective)' in f_token and '(Suffix)' in b_token:
-            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
-            f_token = assemble_token + '(Adjective)' 
-            b_token = ''
-
-            token_list[ft_index] = f_token
-            token_list[bt_index] = b_token
-            
-        if '(Alpha)' in f_token and '(Suffix)' in b_token:
-            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
-            f_token = assemble_token + '(Noun)' 
-            b_token = ''
-
-            token_list[ft_index] = f_token
-            token_list[bt_index] = b_token
-             
-        
-        if '(PreEomi)' in f_token and '(Eomi)' in b_token:
-            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
-            
-            f_token = assemble_token + '(Eomi)' 
-            b_token = ''
-
-            token_list[ft_index] = f_token
-            token_list[bt_index] = b_token
-    
-        
-        if '(Modifier)' in f_token and '(Modifier)' in b_token :           
-            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
-            
-            f_token = assemble_token + '(Noun)'
-            b_token = ''
-
-            token_list[ft_index] = f_token
-            token_list[bt_index] = b_token
-            
-        if '(Modifier)' in f_token and '(Noun)' in b_token :          
-            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
-            
-            f_token = assemble_token + '(Noun)'
-            b_token = ''
-
-            token_list[ft_index] = f_token
-            token_list[bt_index] = b_token
-      
-
-        
+                                    
     ws_indexs = np.where(np.array(token_list) == '')[0].tolist()
     w = 0
     for ws in ws_indexs:
@@ -1262,12 +1153,349 @@ def restore_pos(tokenized_sentence):
     return(re_sentence)
 ```
 
+```python
+def refine_pos1(tokenized_sentence):
+    token_list = tokenized_sentence.split()
+    
+    for i in range(len(token_list)-1):
+        ft_index = i
+        bt_index = i+1
+        
+        f_token = token_list[ft_index]
+        b_token = token_list[bt_index]
+        
+        
+        if f_token == '_(_)' and b_token == '엇(VerbPrefix)':          
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+            
+            f_token = assemble_token + '(Exclamation)'
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+        
+        
+        if '(Noun)' in f_token or '(Adjective)' in f_token:
+            if b_token == '쵸(VerbPrefix)':          
+                assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+
+                f_token = assemble_token + '(Adjective)'
+                b_token = ''
+
+                token_list[ft_index] = f_token
+                token_list[bt_index] = b_token
+        
+        
+        if f_token == '하(Suffix)' and '(Josa)' in b_token:      
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+            
+            f_token = assemble_token + '(Josa)'
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+
+
+        
+        if f_token == '이(Determiner)' or f_token == '저(Determiner)' or f_token == '그(Determiner)':
+            if b_token == '거(Noun)' or b_token == '걸(Noun)' or b_token == '것(Noun)' or b_token == '게(Noun)' or b_token == '고(Suffix)' or b_token == '기(Suffix)': 
+                assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+
+                f_token = assemble_token + '(Determiner)'
+                b_token = ''
+
+                token_list[ft_index] = f_token
+                token_list[bt_index] = b_token
+                
+                
+        if f_token == '그(Determiner)':
+            if b_token == '정도(Noun)' or b_token == '런가(Noun)' or b_token == '래야(Noun)': 
+                assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+
+                f_token = assemble_token + '(Adverb)'
+                b_token = ''
+
+                token_list[ft_index] = f_token
+                token_list[bt_index] = b_token
+        
+        
+        if f_token == '이(Determiner)':
+            if b_token == '지(Suffix)' or b_token == '당(Noun)':
+                assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+
+                f_token = assemble_token + '(Eomi)'
+                b_token = ''
+
+                token_list[ft_index] = f_token
+                token_list[bt_index] = b_token
+        
+        
+        if f_token == '네(Determiner)' and b_token == '여(Noun)':
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+
+            f_token = assemble_token + '(Eomi)'
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+                
+        
+        if f_token == '이(Determiner)' and b_token == '기적(Noun)':
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+
+            f_token = assemble_token + '(Adjective)'
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+            
+            
+        if f_token == '이(Determiner)' or f_token == '그(Determiner)' :
+            if b_token == '제(Suffix)' or b_token == '젠(Noun)':
+                assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+
+                f_token = assemble_token + '(Adverb)'
+                b_token = ''
+
+                token_list[ft_index] = f_token
+                token_list[bt_index] = b_token
+            
+            
+            
+        if f_token == '저(Determiner)' and b_token == '나(Noun)':
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+
+            f_token = assemble_token + '(Noun)'
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+        
+        
+        if f_token == '내(Determiner)' or f_token == '두(Determiner)':
+            if b_token == '고(Modifier)':
+                assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+
+                f_token = assemble_token + '(Verb)'
+                b_token = ''
+
+                token_list[ft_index] = f_token
+                token_list[bt_index] = b_token
+        
+        
+        if f_token == '이(Determiner)' and b_token == '고(Modifier)':
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+
+            f_token = assemble_token + '(Determiner)'
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+            
+            
+        if f_token == '내(Determiner)':
+            if b_token == '일(Suffix)' or b_token == '일(Modifier)':
+                assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+
+                f_token = assemble_token + '(Noun)'
+                b_token = ''
+
+                token_list[ft_index] = f_token
+                token_list[bt_index] = b_token
+            
+            
+        if f_token == '이(Determiner)': 
+            if b_token == '사(Modifier)' or b_token == '모(Modifier)' or b_token == '사(Suffix)' or b_token == '모(Suffix)':
+                assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+
+                f_token = assemble_token + '(Noun)'
+                b_token = ''
+
+                token_list[ft_index] = f_token
+                token_list[bt_index] = b_token
+            
+        if f_token == '그(Determiner)':
+            if b_token == '니(Suffix)' or b_token == '니(Modifier)':
+                assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+
+                f_token = assemble_token + '(Determiner)'
+                b_token = ''
+
+                token_list[ft_index] = f_token
+                token_list[bt_index] = b_token
+        
+        if f_token == '이(Determiner)' and b_token == '엿(Modifier)':
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+
+            f_token = assemble_token + '(Eomi)'
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+        
+        
+        if '(Number)' in f_token and  b_token == '퍼(PreEomi)':          
+            b_token = b_token.replace('PreEomi', 'Suffix')
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+
+            
+        if '(Noun)' in f_token and  b_token == '두(Josa)':          
+            
+            f_token = f_token
+            b_token = b_token.replace('Determiner', 'Suffix')
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+            
+            
+        if f_token == '너(Modifier)' and b_token == '네(Modifier)':
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+
+            f_token = assemble_token + '(Modifier)'
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+        
+        
+        if '(Modifier)' in f_token and len(f_token) == 11 and f_token != '너(Modifier)':
+            if '(Modifier)' in b_token and len(b_token) == 11:           
+                assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+
+                f_token = assemble_token + '(Modifier)'
+                b_token = ''
+
+                token_list[ft_index] = f_token
+                token_list[bt_index] = b_token  
+            
+            
+        if f_token == '잘(VerbPrefix)' and b_token == '못(VerbPrefix)':    
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+            
+            f_token = assemble_token + '(Adjective)'
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+            
+            
+        if '(Noun)' in f_token:
+            if b_token == '적(Suffix)' or b_token == '계(Suffix)' or b_token == '급(Suffix)':
+                assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+
+                f_token = assemble_token + '(Adjective)'
+                b_token = ''
+
+                token_list[ft_index] = f_token
+                token_list[bt_index] = b_token
+            
+            
+        if '(Noun)' in f_token and b_token == '어(Suffix)':
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+
+            f_token = assemble_token + '(Verb)'
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+            
+            
+    ws_indexs = np.where(np.array(token_list) == '')[0].tolist()
+    w = 0
+    for ws in ws_indexs:
+        ws -= w
+        del token_list[ws]
+        w += 1
+    
+    re_sentence = ' '.join(token_list)
+
+    return(re_sentence)
+            
+            
+            
+def refine_pos2(tokenized_sentence):
+    token_list = tokenized_sentence.split()
+    
+    for i in range(len(token_list)-1):
+        ft_index = i
+        bt_index = i+1
+        
+        f_token = token_list[ft_index]
+        b_token = token_list[bt_index]
+        
+        
+        if f_token == '이(Suffix)' or f_token == '중(Suffix)':
+            if '(Josa)' in b_token:
+                assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+
+                f_token = assemble_token + '(Adverb)' 
+                b_token = ''
+
+                token_list[ft_index] = f_token
+                token_list[bt_index] = b_token
+        
+        
+        if '(Josa)' in f_token and '(Josa)' in b_token:
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+            
+            f_token = assemble_token + '(Eomi)' 
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+
+
+        if '(PreEomi)' in f_token and '(Eomi)' in b_token:
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+            
+            f_token = assemble_token + '(Eomi)' 
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+
+        
+        if '(Verb)' in f_token and '(Eomi)' in b_token:
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+            
+            f_token = assemble_token + '(Verb)' 
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+            
+            
+        if '(Adjective)' in f_token and '(Eomi)' in b_token:
+            assemble_token = re.sub(pattern = r'\([^)]*\)', repl='', string = str(f_token + b_token))
+            
+            f_token = assemble_token + '(Adjective)'
+            b_token = ''
+
+            token_list[ft_index] = f_token
+            token_list[bt_index] = b_token
+            
+            
+    ws_indexs = np.where(np.array(token_list) == '')[0].tolist()
+    w = 0
+    for ws in ws_indexs:
+        ws -= w
+        del token_list[ws]
+        w += 1
+    
+    re_sentence = ' '.join(token_list)
+
+    return(re_sentence)
+```
 
 ```python
 tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(fix_foreign)
 tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(fix_suffix_Noun)
-tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(restore_pos)
-tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(fix_suffix_Noun2)
+tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(restore_word)
+tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(refine_pos1)
+tokenized_df['tokenized'] = tokenized_df['tokenized'].progress_apply(refine_pos2)
+tokenized_df = tokenized_df[['sex', 'age', 'contents', 'tokenized', 'token_count']]
 tokenized_df
 ```
 
@@ -1283,8 +1511,6 @@ tokenized_df
       <th>sex</th>
       <th>age</th>
       <th>contents</th>
-      <th>length</th>
-      <th>word_bunch</th>
       <th>tokenized</th>
       <th>token_count</th>
     </tr>
@@ -1305,8 +1531,6 @@ tokenized_df
       <td>남성</td>
       <td>20대</td>
       <td>헐 ㅠㅠ 언넝호텔들가ㅠㅠ 엄청피건할첸데 나는인낫러요 나 두시출근이다ㅎㅎㅎㅎ 퀵으로한...</td>
-      <td>130</td>
-      <td>18</td>
       <td>헐(Verb) ㅠㅠ(KoreanParticle) 언넝(Noun) 호텔들(Noun) ...</td>
       <td>49</td>
     </tr>
@@ -1315,8 +1539,6 @@ tokenized_df
       <td>여성</td>
       <td>20대</td>
       <td>학생이면좋구! 왜혼자다니냐고오..... 와 내친군학교나감 ㅋㅋㅋㅋㅋ 그르네 막졸업한...</td>
-      <td>56</td>
-      <td>7</td>
       <td>학생이(Noun) 면(Josa) 좋구(Adjective) !(Punctuation)...</td>
       <td>25</td>
     </tr>
@@ -1325,8 +1547,6 @@ tokenized_df
       <td>남성</td>
       <td>20대</td>
       <td>훔 학생 없는데...주변에... 아니 복학하고 학교를 못가는데 어케 친구가있냐.. ...</td>
-      <td>74</td>
-      <td>15</td>
       <td>훔(Noun) 학생(Noun) 없는데(Adjective) ...(Punctuatio...</td>
       <td>31</td>
     </tr>
@@ -1335,8 +1555,6 @@ tokenized_df
       <td>여성</td>
       <td>30대</td>
       <td>참나 내가뭐얼마나그랬다고 웃기는사람이야지짜 너무화난당.. 근데오빠는말을또 잘해서 내...</td>
-      <td>146</td>
-      <td>19</td>
       <td>참나(Noun) 내(Noun) 가(Josa) 뭐(Noun) 얼마나(Noun) 그랬다...</td>
       <td>63</td>
     </tr>
@@ -1372,7 +1590,7 @@ tokenized_df.to_csv('카톡대화_Tokenized.csv(pos 교정)', index = False)
 
 
 ```python
-re_dic = occur_countor(tokenized_df)
+re_dic = pos_token_countor(tokenized_df)
 re_dic['word'], re_dic['pos'] = zip(*re_dic['Token'].apply(lambda x: word_pos_split(x)))
 re_dic = re_dic[['Token', 'word', 'pos', 'Token_freq', 'Total_ratio']]
 re_dic.to_csv('카톡대화_pos_dic(pos 교정).csv', index=False)
@@ -1386,22 +1604,28 @@ re_dic.to_csv('카톡대화_pos_dic(pos 교정).csv', index=False)
 
 
 ```python
+import gc
+
 def feature_extractor(data, dic , col, features):
     token_dic = dic['Token'].to_list()
-    
+
     merged_df = dic[['Token']].copy()
     for feature in features:
         feature_df = data.loc[data[f'{col}'] == feature]
 
-        Token_Freq_in_feature_Documents = [0 for i in range(len(token_dic))] # 특성 문서에서 특정 토큰이 출현한 횟수 
-        feature_Documents_Freq_by_Token = [0 for i in range(len(token_dic))] # 특정 토큰이 출현한 특성 문서의 수
+        Token_Freq_in_feature_Documents = [0]*len(token_dic) # 특성 문서에서 특정 토큰이 출현한 횟수 
+        feature_Documents_Freq_by_Token = [0]*len(token_dic) # 특정 토큰이 출현한 특성 문서의 수
         
         total_length = len(feature_df)
         splited_li = split_dataframe(feature_df, size=1000)
-
-        for splited_df in tqdm(splited_li, total=len(splited_li), desc=f"{feature}"):  
+        
+        n = 0
+        for splited_df in tqdm(splited_li, total=len(splited_li), desc=f"{feature}"): 
+            if n%500 == 0:
+                gc.collect()
+            n+=1
             for index, row in splited_df.iterrows():
-                token_list = row['tokenized'].split(', ') # 문서 토크나이징  
+                token_list = row['tokenized'].split(' ') # 문서 토크나이징  
 
                 for token in token_list: # 문서에서 특정 토큰이 출현한 수
                     if token in token_dic:
@@ -1418,6 +1642,7 @@ def feature_extractor(data, dic , col, features):
                         feature_Documents_Freq_by_Token[idx] += 1
                     else:
                         pass  
+            
 
         Token_Freq_in_feature_Documents_list = []
         for f in Token_Freq_in_feature_Documents:
