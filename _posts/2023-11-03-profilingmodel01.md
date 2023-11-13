@@ -126,7 +126,8 @@ for file in file_list:     #리스트의 json 파일 선택
                 for n in idx:    #동일 화자 메세지 병합 및 불필요 패턴 제거
                     same_id_text.append(speaker_text[n])
                 same_id_conversation = ' '.join(same_id_text)
-                same_id_conversation = same_id_conversation.replace('#@이름#', 'User').replace('#@계정#', 'UserID').replace('#@신원#', '').replace('#@전번#', '').replace('#@주소#', '').replace('#@번호#', '').replace('#@소속#', '').replace('#@금융#', '').replace('#@이모티콘#', '').replace('#@시스템#사진#', '').replace('#@시스템#검색#', '').replace('#@시스템#송금#', '').replace('#@시스템#동영상# ', '').replace('#@기타#', '').replace('#@URL#', '')
+                same_id_conversation = same_id_conversation.replace('#@이름#', 'User').replace('#@계정#', 'UserID').replace('#@신원#', '').replace('#@전번#', '').replace('#@주소#', '').replace('#@번호#', '').replace('#@소속#', '').replace('#@금융#', '').replace('#@이모티콘#', '').replace('#@URL#', '').replace('#@시스템', '').replace('#사진#', '').replace('#검색#', '').replace('#송금#', '').replace('#동영상# ', '').replace('#파일#', '').replace('#기타#', '').replace('#삭제#', '')
+
 
                 speaker = participant_info[c]
                 
@@ -219,7 +220,7 @@ for file in file_list:     #리스트의 json 파일 선택
                 for n in idx:    #동일 화자 메세지 병합 및 불필요 패턴 제거
                     same_id_text.append(speaker_text[n])
                 same_id_conversation = ' '.join(same_id_text)
-                same_id_conversation = same_id_conversation.replace('#@이름#', 'User').replace('#@계정#', 'UserID').replace('#@신원#', '').replace('#@전번#', '').replace('#@주소#', '').replace('#@번호#', '').replace('#@소속#', '').replace('#@금융#', '').replace('#@이모티콘#', '').replace('#@시스템#사진#', '').replace('#@시스템#검색#', '').replace('#@시스템#송금#', '').replace('#@시스템#동영상# ', '').replace('#@기타#', '').replace('#@URL#', '')
+                same_id_conversation = same_id_conversation.replace('#@이름#', 'User').replace('#@계정#', 'UserID').replace('#@신원#', '').replace('#@전번#', '').replace('#@주소#', '').replace('#@번호#', '').replace('#@소속#', '').replace('#@금융#', '').replace('#@이모티콘#', '').replace('#@URL#', '').replace('#@시스템', '').replace('#사진#', '').replace('#검색#', '').replace('#송금#', '').replace('#동영상# ', '').replace('#파일#', '').replace('#기타#', '').replace('#삭제#', '')
 
                 speaker = participant_info[c]
                 
