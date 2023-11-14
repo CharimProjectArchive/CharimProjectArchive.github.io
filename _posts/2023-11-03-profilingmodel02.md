@@ -1604,82 +1604,59 @@ re_dic.to_csv('카톡대화_pos_dic(pos 교정).csv', index=False)
 
 
 ```python
-import gc
+def feature_extractor(data, dic , col, classes):
+    classes_dic = dic.copy()
+    for cls in classes:
+        cls_df = data.loc[data[f'{col}'] == cls]
 
-def feature_extractor(data, dic , col, features):
-    token_dic = dic['Token'].to_list()
-
-    merged_df = dic[['Token']].copy()
-    for feature in features:
-        feature_df = data.loc[data[f'{col}'] == feature]
-
-        Token_Freq_in_feature_Documents = [0]*len(token_dic) # 특성 문서에서 특정 토큰이 출현한 횟수 
-        feature_Documents_Freq_by_Token = [0]*len(token_dic) # 특정 토큰이 출현한 특성 문서의 수
+        Freq_voca = {t:0 for t in dic['Token']} # 문서의 작성자가 cls일 때, 특정 토큰의 빈도 수의 총합
+        Bias_voca = Freq_voca.copy() # 문서의 작성자가 cls일 때, 특정 토큰의 출현여부의 총합
         
-        total_length = len(feature_df)
-        splited_li = split_dataframe(feature_df, size=1000)
-        
+        splited_li = split_dataframe(cls_df, size=1000)
         n = 0
-        for splited_df in tqdm(splited_li, total=len(splited_li), desc=f"{feature}"): 
+        for splited_df in tqdm(splited_li, total=len(splited_li), desc=f"{cls}"): 
             if n%500 == 0:
                 gc.collect()
             n+=1
+            
             for index, row in splited_df.iterrows():
                 token_list = row['tokenized'].split(' ') # 문서 토크나이징  
 
-                for token in token_list: # 문서에서 특정 토큰이 출현한 수
-                    if token in token_dic:
-                        idx = token_dic.index(token)
-                        Token_Freq_in_feature_Documents[idx] += 1
+                for token in token_list: # 특정 토큰의 빈도 수 카운팅
+                    if token in Freq_voca:
+                        Freq_voca[token] += 1
 
-                    else:
-                        pass
-
-                uniqe_token_list = list(set(token_list)) # 토크나이징 된 문장에서 고유한 토큰만 남김, 한 문서에서 동일한 토큰이 여러번 카운팅 되는 것을 방지
-                for uniqe_token in uniqe_token_list: # 특정 토큰이 출현한 문서의 수
-                    if uniqe_token in token_dic: 
-                        idx = token_dic.index(uniqe_token)
-                        feature_Documents_Freq_by_Token[idx] += 1
-                    else:
-                        pass  
-            
-
-        Token_Freq_in_feature_Documents_list = []
-        for f in Token_Freq_in_feature_Documents:
-            if f == 0:
-                f = 0.1
-            else:
-                pass
-            Token_Freq_in_feature_Documents_list.append(f)
-
-        feature_Documents_Freq_by_Token_list = []
-        for b in feature_Documents_Freq_by_Token:
-            if b == 0:
-                b = 0.1
-            else:
-                pass
-            feature_Documents_Freq_by_Token_list.append(b)
+                unique_tokens = list(set(token_list)) # 특정 토큰의 출연여부 카운팅
+                for unique in unique_tokens:
+                    if token in Bias_voca:
+                        Bias_voca[token] += 1
+  
         
-        feature_df = pd.DataFrame()
-        feature_df['Token'] = dic['Token'].copy()
-        
-        feature_Documents_num = len(feature_df)
-        feature_df[f'Freq_{feature}'] = Token_Freq_in_feature_Documents_list #성별에 따른 토큰 출현 빈도
-        feature_df[f'Freq_ratio_{feature}'] = np.array(feature_df[f'Freq_{feature}'])/feature_Documents_num #성별에 따른 토큰 출현율
-        feature_df[f'Bias_{feature}'] = feature_Documents_Freq_by_Token_list #특정 토큰 출현 시, 작성자 성별이 'sex'인 빈도
-        feature_df[f'Bias_ratio_{feature}'] = np.array(feature_df[f'Bias_{feature}'])/feature_Documents_num #특정 토큰 출현 시, 작성자 성별이 'sex'인 비율
-    
-        merged_df = pd.merge(merged_df, feature_df, how='left', on='Token')
-    return merged_df 
+        Freq_dic = pd.DataFrame(Freq_voca.items(), columns=['Token', f'Freq_{cls}'])
+        Freq_dic[f'Freq_ratio_{cls}'] = Freq_dic[f'Freq_{cls}']/len(cls_df)
+                                                
+        Bias_dic = pd.DataFrame(Bias_voca.items(), columns=['Token', f'Bias_{cls}'])
+        Bias_dic[f'Bias_ratio_{cls}'] = Bias_dic[f'Bias_{cls}']/len(cls_df)  
+                                
+        cls_dic = pd.merge(dic[['Token']], Freq_dic, how='left', on='Token')                        
+        cls_dic = pd.merge(cls_dic, Bias_dic, how='left', on='Token')
+                                
+        classes_dic = pd.merge(classes_dic, cls_dic, how='left', on='Token')
+        classes_dic = classes_dic.replace(0, 0.1)
+    return classes_dic 
 ```
 
 
 ```python
 gender_class = ['남성', '여성']
 gender_dic = feature_extractor(tokenized_df, re_dic, 'sex', gender_class)
+
+gender_dic['Gender_Freq'] = np.log(gender_dic['Freq_ratio_남성']/gender_dic['Freq_ratio_여성']) # 성별 상대 빈출도
+gender_dic['Gender_Bias'] = np.log(gender_dic['Bias_ratio_남성']/gender_dic['Bias_ratio_여성']) # 성별 상대 편향도
+gender_dic = gender_dic[['Token', 'word', 'pos', 'Token_freq', 'Total_ratio', 'Gender_Freq', 'Gender_Bias']]
 ```
 
-    남성: 100%|██████████████████████████████████████████████████████████████████████| 782/782 [00:13<00:00, 1.99it/s]
+    남성: 100%|██████████████████████████████████████████████████████████████████████| 791/791 [00:48<00:00, 16.28it/s]
     ...생략...
 
 
@@ -1688,93 +1665,43 @@ gender_dic = feature_extractor(tokenized_df, re_dic, 'sex', gender_class)
 ```python
 age_class = ['20대 미만', '20대', '30대', '40대', '50대', '60대', '70대 이상'] 
 age_dic = feature_extractor(tokenized_df, re_dic, 'age', age_class)
+
+other_dic = token_dic[['Token']].copy().reset_index(drop=True)
+for age in age_class:
+    ages = ['20대 미만', '20대', '30대', '40대', '50대', '60대', '70대 이상'] 
+    others_num = len(df.loc[df['age'] != age])
+    ages.remove(age)
+    
+    other_dic[f'Freq_ratio_others_{age}'] = (age_dic[[f'Freq_{a}' for a in ages]].sum(axis=1))/others_num
+    other_dic[f'Bias_ratio_others_{age}'] = (age_dic[[f'Bias_{a}' for a in ages]].sum(axis=1))/others_num
+    
+    age_dic[f'{age}_Freq'] = np.log(age_dic[f'Freq_ratio_{age}']/other_dic[f'Freq_ratio_others_{age}']) 
+    age_dic[f'{age}_Bias'] = np.log(age_dic[f'Bias_ratio_{age}']/other_dic[f'Bias_ratio_others_{age}']) 
+    
+age_dic = age_dic[['Token', 
+                   '20대 미만_Freq', '20대 미만_Bias', '20대_Freq', '20대_Bias',
+                   '30대_Freq', '30대_Bias', '40대_Freq', '40대_Bias',
+                   '50대_Freq', '50대_Bias', '60대_Freq', '60대_Bias',
+                   '70대 이상_Freq', '70대 이상_Bias']]
+
+age_dic = age_dic.rename(columns={'20대 미만_Freq':'A10_Freq', '20대 미만_Bias':'A10_Bias',
+                        '20대_Freq':'A20_Freq', '20대_Bias':'A20_Bias',
+                        '30대_Freq':'A30_Freq', '30대_Bias':'A30_Bias',
+                        '40대_Freq':'A40_Freq', '40대_Bias':'A40_Bias',
+                        '50대_Freq':'A50_Freq', '50대_Bias':'A50_Bias',
+                        '60대_Freq':'A60_Freq', '60대_Bias':'A60_Bias',
+                        '70대 이상_Freq':'A70_Freq', '70대 이상_Bias':'A70_Bias'})
 ```
 
-    20대 미만: 100%|█████████████████████████████████████████████████████████████████| 102/102 [11:40<00:00, 1.98it/s]
+    20대 미만: 100%|█████████████████████████████████████████████████████████████████| 103/103 [00:07<00:00, 14.59it/s]
     ...생략...
 
 
 
 
 ```python
-other_dic = pd.DataFrame()
-other_dic['Token'] = age_dic['Token']
-
-other10_Douments_num = len(df.loc[df['age'] != '20대 미만'])
-other_dic['Freq_ratio_other10'] = (age_dic['Freq_20대'] + age_dic['Freq_30대'] + age_dic['Freq_40대'] + age_dic['Freq_50대'] + age_dic['Freq_60대'] + age_dic['Freq_70대 이상']) / other10_Douments_num # 
-other_dic['Bias_ratio_other10'] = (age_dic['Bias_20대'] + age_dic['Bias_30대'] + age_dic['Bias_40대'] + age_dic['Bias_50대'] + age_dic['Bias_60대'] + age_dic['Bias_70대 이상']) / other10_Douments_num # 
-
-other20_Douments_num = len(df.loc[df['age'] != '20대'])
-other_dic['Freq_ratio_other20'] = (age_dic['Freq_20대 미만'] + age_dic['Freq_30대'] + age_dic['Freq_40대'] + age_dic['Freq_50대'] + age_dic['Freq_60대'] + age_dic['Freq_70대 이상']) / other20_Douments_num # 
-other_dic['Bias_ratio_other20'] = (age_dic['Bias_20대 미만'] + age_dic['Bias_30대'] + age_dic['Bias_40대'] + age_dic['Bias_50대'] + age_dic['Bias_60대'] + age_dic['Bias_70대 이상']) / other20_Douments_num # 
-
-other30_Douments_num = len(df.loc[df['age'] != '30대'])
-other_dic['Freq_ratio_other30'] = (age_dic['Freq_20대 미만'] + age_dic['Freq_20대'] + age_dic['Freq_40대'] + age_dic['Freq_50대'] + age_dic['Freq_60대'] + age_dic['Freq_70대 이상']) / other30_Douments_num # 
-other_dic['Bias_ratio_other30'] = (age_dic['Bias_20대 미만'] + age_dic['Bias_20대'] + age_dic['Bias_40대'] + age_dic['Bias_50대'] + age_dic['Bias_60대'] + age_dic['Bias_70대 이상']) / other30_Douments_num # 
-
-other40_Douments_num = len(df.loc[df['age'] != '40대'])
-other_dic['Freq_ratio_other40'] = (age_dic['Freq_20대 미만'] + age_dic['Freq_20대'] + age_dic['Freq_30대'] + age_dic['Freq_50대'] + age_dic['Freq_60대'] + age_dic['Freq_70대 이상']) / other40_Douments_num # 
-other_dic['Bias_ratio_other40'] = (age_dic['Bias_20대 미만'] + age_dic['Bias_20대'] + age_dic['Bias_30대'] + age_dic['Bias_50대'] + age_dic['Bias_60대'] + age_dic['Bias_70대 이상']) / other40_Douments_num # 
-
-other50_Douments_num = len(df.loc[df['age'] != '50대'])
-other_dic['Freq_ratio_other50'] = (age_dic['Freq_20대 미만'] + age_dic['Freq_20대'] + age_dic['Freq_30대'] + age_dic['Freq_40대'] + age_dic['Freq_60대'] + age_dic['Freq_70대 이상']) / other50_Douments_num # 
-other_dic['Bias_ratio_other50'] = (age_dic['Bias_20대 미만'] + age_dic['Bias_20대'] + age_dic['Bias_30대'] + age_dic['Bias_40대'] + age_dic['Bias_60대'] + age_dic['Bias_70대 이상']) / other50_Douments_num # 
-
-other60_Douments_num = len(df.loc[df['age'] != '60대'])
-other_dic['Freq_ratio_other60'] = (age_dic['Freq_20대 미만'] + age_dic['Freq_20대'] + age_dic['Freq_30대'] + age_dic['Freq_40대'] + age_dic['Freq_50대'] + age_dic['Freq_70대 이상']) / other60_Douments_num
-other_dic['Bias_ratio_other60'] = (age_dic['Bias_20대 미만'] + age_dic['Bias_20대'] + age_dic['Bias_30대'] + age_dic['Bias_40대'] + age_dic['Bias_50대'] + age_dic['Bias_70대 이상']) / other60_Douments_num
-
-other70_Douments_num = len(df.loc[df['age'] != '70대 이상'])
-other_dic['Freq_ratio_other70'] = (age_dic['Freq_20대 미만'] + age_dic['Freq_20대'] + age_dic['Freq_30대'] + age_dic['Freq_40대'] + age_dic['Freq_50대'] + age_dic['Freq_60대']) / other70_Douments_num
-other_dic['Bias_ratio_other70'] = (age_dic['Bias_20대 미만'] + age_dic['Bias_20대'] + age_dic['Bias_30대'] + age_dic['Bias_40대'] + age_dic['Bias_50대'] + age_dic['Bias_60대']) / other70_Douments_num
-```
-
-
-
-```python
-relative_dic = re_dic[['Token', 'Token_freq', 'Total_ratio']].copy()
-
-#성별에 대한 
-relative_dic['Gender_Freq'] = np.log(gender_dic['Freq_ratio_남성']/gender_dic['Freq_ratio_여성']) # 성별 상대 빈출도
-relative_dic['Gender_Bias'] = np.log(gender_dic['Bias_ratio_남성']/gender_dic['Bias_ratio_여성']) # 성별 상대 편향도
-
-
-#연령에 대한
-relative_dic['A10_Freq'] = np.log(age_dic['Freq_ratio_20대 미만']/other_dic['Freq_ratio_other10']) 
-relative_dic['A10_Bias'] = np.log(age_dic['Bias_ratio_20대 미만']/other_dic['Bias_ratio_other10']) 
-
-relative_dic['A20_Freq'] = np.log(age_dic['Freq_ratio_20대']/other_dic['Freq_ratio_other20']) 
-relative_dic['A20_Bias'] = np.log(age_dic['Bias_ratio_20대']/other_dic['Bias_ratio_other20']) 
-
-relative_dic['A30_Freq'] = np.log(age_dic['Freq_ratio_30대']/other_dic['Freq_ratio_other30']) 
-relative_dic['A30_Bias'] = np.log(age_dic['Bias_ratio_30대']/other_dic['Bias_ratio_other30'])
-
-relative_dic['A40_Freq'] = np.log(age_dic['Freq_ratio_40대']/other_dic['Freq_ratio_other40']) 
-relative_dic['A40_Bias'] = np.log(age_dic['Bias_ratio_40대']/other_dic['Bias_ratio_other40'])
-
-relative_dic['A50_Freq'] = np.log(age_dic['Freq_ratio_50대']/other_dic['Freq_ratio_other50']) 
-relative_dic['A50_Bias'] = np.log(age_dic['Bias_ratio_50대']/other_dic['Bias_ratio_other50'])
-
-relative_dic['A60_Freq'] = np.log(age_dic['Freq_ratio_60대']/other_dic['Freq_ratio_other60']) 
-relative_dic['A60_Bias'] = np.log(age_dic['Bias_ratio_60대']/other_dic['Bias_ratio_other60'])
-
-relative_dic['A70_Freq'] = np.log(age_dic['Freq_ratio_70대 이상']/other_dic['Freq_ratio_other70']) 
-relative_dic['A70_Bias'] = np.log(age_dic['Bias_ratio_70대 이상']/other_dic['Bias_ratio_other70'])
-```
-
-
-
-
-```python
-relative_dic['word'], relative_dic['pos'] = zip(*relative_dic['Token'].apply(lambda x: word_pos_split(x)))
-
-relative_dic = relative_dic[['Token', 'word', 'pos', 'Token_freq', 'Total_ratio',
-                             'Gender_Freq', 'Gender_Bias', 
-                             'A10_Freq', 'A10_Bias', 'A20_Freq', 'A20_Bias', 
-                             'A30_Freq', 'A30_Bias', 'A40_Freq', 'A40_Bias',
-                             'A50_Freq', 'A50_Bias', 'A60_Freq', 'A60_Bias', 'A70_Freq', 'A70_Bias']] 
-
-relative_dic
+feature_dic = pd.merge(gender_dic, age_dic, how='left', on='Token')
+feature_dic
 ```
 
 
@@ -2080,7 +2007,7 @@ relative_dic
 
 
 ```python
-relative_dic.to_csv('카톡대화_feature_dic.csv', index=False)
+feature_dic.to_csv('카톡대화_feature_dic.csv', index=False)
 ```
 
 
