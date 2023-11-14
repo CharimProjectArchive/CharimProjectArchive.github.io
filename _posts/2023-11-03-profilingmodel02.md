@@ -1629,16 +1629,18 @@ def feature_extractor(data, dic , col, classes):
   
         
         Freq_dic = pd.DataFrame(Freq_voca.items(), columns=['Token', f'Freq_{cls}'])
+        Freq_dic = Freq_dic.replace(0, 0.1)
         Freq_dic[f'Freq_ratio_{cls}'] = Freq_dic[f'Freq_{cls}']/len(cls_df)
-                                                
+        
         Bias_dic = pd.DataFrame(Bias_voca.items(), columns=['Token', f'Bias_{cls}'])
-        Bias_dic[f'Bias_ratio_{cls}'] = Bias_dic[f'Bias_{cls}']/len(cls_df)  
-                                
+        Bias_dic = Bias_dic.replace(0, 0.1)
+        Bias_dic[f'Bias_ratio_{cls}'] = Bias_dic[f'Bias_{cls}']/len(cls_df) 
+        
         cls_dic = pd.merge(dic[['Token']], Freq_dic, how='left', on='Token')                        
         cls_dic = pd.merge(cls_dic, Bias_dic, how='left', on='Token')
-                                
+              
         classes_dic = pd.merge(classes_dic, cls_dic, how='left', on='Token')
-        classes_dic = classes_dic.replace(0, 0.1)
+
     return classes_dic 
 ```
 
