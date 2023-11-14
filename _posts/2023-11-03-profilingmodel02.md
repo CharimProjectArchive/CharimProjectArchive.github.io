@@ -1521,8 +1521,6 @@ tokenized_df
       <td>여성</td>
       <td>20대</td>
       <td>나지금밥머거2시간걸어서 번화가찾았어..ㅜㅜ 잉ㅜㅜ ㅎㅎㅎㅎ오좋겠네 ㅋㄱㅋㄱㄱㄱㄱ아니...</td>
-      <td>127</td>
-      <td>16</td>
       <td>나(Noun) 지금(Noun) 밥(Noun) 머거(Verb) 2시간(Number) ...</td>
       <td>54</td>
     </tr>
@@ -1570,7 +1568,7 @@ tokenized_df
     </tr>
   </tbody>
 </table>
-<p>3502903 rows × 7 columns</p>
+<p>3554460 rows × 5 columns</p>
 
 
 
