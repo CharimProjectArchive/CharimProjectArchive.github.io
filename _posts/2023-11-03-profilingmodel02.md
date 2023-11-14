@@ -1605,7 +1605,7 @@ def feature_extractor(data, dic , col, classes):
     for cls in classes:
         cls_df = data.loc[data[f'{col}'] == cls]
 
-        Freq_voca = {t:0 for t in dic['Token']} # 문서의 작성자가 cls일 때, 특정 토큰의 빈도 수의 총합
+        Freq_voca = {t:0.1 for t in dic['Token']} # 문서의 작성자가 cls일 때, 특정 토큰의 빈도 수의 총합
         Bias_voca = Freq_voca.copy() # 문서의 작성자가 cls일 때, 특정 토큰의 출현여부의 총합
         
         splited_li = split_dataframe(cls_df, size=1000)
@@ -1629,18 +1629,16 @@ def feature_extractor(data, dic , col, classes):
   
         
         Freq_dic = pd.DataFrame(Freq_voca.items(), columns=['Token', f'Freq_{cls}'])
-        Freq_dic = Freq_dic.replace(0, 0.1)
         Freq_dic[f'Freq_ratio_{cls}'] = Freq_dic[f'Freq_{cls}']/len(cls_df)
         
         Bias_dic = pd.DataFrame(Bias_voca.items(), columns=['Token', f'Bias_{cls}'])
-        Bias_dic = Bias_dic.replace(0, 0.1)
         Bias_dic[f'Bias_ratio_{cls}'] = Bias_dic[f'Bias_{cls}']/len(cls_df) 
         
         cls_dic = pd.merge(dic[['Token']], Freq_dic, how='left', on='Token')                        
         cls_dic = pd.merge(cls_dic, Bias_dic, how='left', on='Token')
               
         classes_dic = pd.merge(classes_dic, cls_dic, how='left', on='Token')
-
+        
     return classes_dic 
 ```
 
