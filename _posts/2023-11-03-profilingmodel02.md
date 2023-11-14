@@ -71,7 +71,7 @@ a. **Relative Bias of Gender**(RBG, 상별에 대한 상대 편향도)<br>
 - 텍스트의 작성자가 특정 성별/연령일 때 타 성별/연령 보다 **표현 t를 상대적으로 많이 사용하는 정도**를 설명함
 - 상대 편형도는 문장에서 표현의 출연여부를 기준으로 하는 반면, 상대 빈출도는 빈도수를 기준으로 함<br>
 - 상대 편향도와 계산 방식이 유사하므로 설명은 생략함
->  $RFG_i = ln[ n(t_i | s_{male}) / n(s_{male}) ÷ n(t_i | s_{female}) / n(s_{female}) ]$
+>  $RFG_i = ln[ n(t_i | s_{male}) / n(s_{male}) ÷ n(t_i | s_{female}) / n(s_{female}) ]$<br>
 >  $RFAi = ln[ n(t_i | s_{age}) / n(s_{age}) ÷ n(t_i | s_{other}) / n(s_{other}) ]$
 
 
