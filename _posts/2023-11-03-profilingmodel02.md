@@ -45,10 +45,10 @@ tag: [NLP, 불용어처리, 표제화, 토크나이즈, 변수개발]
 <br><br>
 a. **Relative Bias of Gender**(RBG, 상별에 대한 상대 편향도)<br>
 - 표현 $t_i$ 가 등장한 문장 $s$ 의 작성자 성별이 남자 $male$ 또는 여자 $female$ 인 정도
-> $RBG_i = ln[ p( s_{male} ⏐ t_i∈s_{male} ) / p( s_{female} ⏐ t_i∈s_{female} ) ]$
->  $t_i$ : 문서 내 i번 째 표현<br>
+> $RBG_i = ln[ p(t_i∈s_{male} ⏐ s_{male} ) / p( t_i∈s_{female} ⏐  s_{female} ) ]$
+> $t_i$ : 문서 내 i번 째 표현
 > $s_{male}$ : 작성자의 성별이 남성(m)인 문장
->  $s_{female}$ : 작성자의 성별이 여성(f)인 문장
+> $s_{female}$ : 작성자의 성별이 여성(f)인 문장
 > <br><br>
 > 작성자의 성별이 남성인 문장 $s_{male}$ 에서 표현 $t_i$ 가 등장한 비율 ÷ 여성인 문장 $s_{female}$ 에서 표현 $t_i$ 가 등장한 비율, 0~1 사이의 Skewed한 값을 가짐으로 log를 취해 정규화<br>
   ⇒ $t_i$ 가 등장했을 때 작성자의 성별이 남자 $m$ 또는 여자 $f$ 인 정도
@@ -57,7 +57,7 @@ a. **Relative Bias of Gender**(RBG, 상별에 대한 상대 편향도)<br>
  b. **Relative Bias of Age**(RBG, 연령에 대한 상대 편향도)<br>
   - 표현 $t_i$ 가 등장한 문장 $s$ 의 작성자 연령이 특정 연령대 $age$ 인 정도를 설명함<br>
   - 연령대는 20대 미만/20대/30대/40대/50대 이상 5 class로 분류
-> $RBAi = ln[ p( s_{age} ⏐ t_i∈s_{age} ) / p( s_{other} ⏐ t_i∈s_{other} ) ]$
+> $RBAi = ln[ p( t_i∈s_{age} ⏐ s_{age} ) / p(t_i∈s_{other} ⏐ s_{other} ) ]$
 > $t_i$ : 문서 내 i번 째 표현
 > $s_{age}$ : 작성자의 연령대가 age인 문장
 > $s_{other}$ : 작성자의 연령대가 age가 아닌 문장
@@ -1624,8 +1624,8 @@ def feature_extractor(data, dic , col, classes):
 
                 unique_tokens = list(set(token_list)) # 특정 토큰의 출연여부 카운팅
                 for unique in unique_tokens:
-                    if token in Bias_voca:
-                        Bias_voca[token] += 1
+                    if unique in Bias_voca:
+                        Bias_voca[unique] += 1
   
         
         Freq_dic = pd.DataFrame(Freq_voca.items(), columns=['Token', f'Freq_{cls}'])
